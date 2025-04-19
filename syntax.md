@@ -18,7 +18,6 @@
 
 Rivulet's nuanced grammar may seem overwhelming at first but becomes easy to read and write with practice.
 
-
 ## Lexemes
 
 Rivulet commands are written with these signs. Some re-use characters in a way that only context can disambiguate:
@@ -115,6 +114,10 @@ The first strand above is no longer a Zero Strand, but a reference to the first 
 ## Action Strands
 
 The default command is addition assignment ( += ). To choose another commands, we create an Action Strand to apply to an existing data strand.
+
+| :note: Contibutors: |
+|:---------------------------|
+| The list of actions is still very sparse. If you find commands are missing that you need, please create issues for them. |
 
 Action Strands have hooks that point down or to the right. They sit directly below the data strand they apply to. If two data strands' hooks are aligned vertically, the top action strand applies to the top data strand, the second to the second, etc.
 
