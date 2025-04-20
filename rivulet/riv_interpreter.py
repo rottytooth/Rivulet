@@ -15,6 +15,11 @@ VERSION = __version__
 class Interpreter:
     "Interpreter for the Rivulet programming language, main entry point"
 
+    class OutputOption(Enum):
+        none = 'none'
+        unicode = 'unicode'
+        numeric = 'numeric'
+
     Action = Enum('Action', [
         ('rollback', 1),    # undo all changes to state and exit block
         ('cont', 2),        # continue to next glyph
@@ -26,19 +31,21 @@ class Interpreter:
         self.outfile = None
         self.verbose = False
         self.debug = None
+        self.output = Interpreter.OutputOption.none
 
 
-    def interpret_file(self, progfile, verbose, theme):
+    def interpret_file(self, progfile, verbose, output):
         "Interpret a Rivulet program file"
         self.verbose = verbose
+        self.output = output
 
         with open(progfile, "r", encoding="utf-8") as file:
             program = file.read()
 
-        return self.interpret_program(program, verbose, theme)
+        return self.interpret_program(program, verbose)
     
 
-    def interpret_program(self, program, verbose, theme):
+    def interpret_program(self, program, verbose):
         "Interpret a Rivulet program passed by text"
         self.verbose = verbose
 
@@ -46,9 +53,9 @@ class Interpreter:
 
         glyphs = parser.parse_program(program)
 
-        return self.__interpret(glyphs)
+        self.__interpret(glyphs)
 
-
+    
     def __interpret(self, glyphs):
         state = dict([(1,[])])
 
@@ -73,6 +80,11 @@ class Interpreter:
 
         self.__interpret_block(parse_tree, state)
 
+        if 1 in state:
+            if self.output == Interpreter.OutputOption.unicode:
+                print("".join(chr(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
+            elif self.output == Interpreter.OutputOption.numeric:
+                print(" ".join(str(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))        
 
     def treeify_glyphs(self, glyphs, curr_level, tree):
         "Reorganize a flat list of glyphs into a tree by level"
@@ -201,6 +213,10 @@ class Interpreter:
             print(self.debug.glyph_pseudo(glyph))
             print(state)
             print("\n")
+        elif self.output == Interpreter.OutputOption.none:
+            print(" ")
+            print(f"glyph: {glyph['id']}")
+            print("\n".join([f"{k}: {v}" for k, v in state.items() if v]))
 
         return retval
     
@@ -283,6 +299,7 @@ def main():
                         default=False, help='verbose logging')
     arg_parser.add_argument('--svg', dest='svg', action='store_true', default=False,
                         help='generate svg of program, then exit')
+    arg_parser.add_argument('-o', dest='output', type=Interpreter.OutputOption, default=Interpreter.OutputOption.none, choices=list(Interpreter.OutputOption))
     arg_parser.add_argument('--theme', dest='color_set', default="default", help="color scheme for svg")
     args = arg_parser.parse_args()
 
@@ -295,7 +312,7 @@ def main():
         intr.draw_svg(args.progfile, args.color_set)
         exit(0)
 
-    intr.interpret_file(args.progfile, args.verbose, args.color_set)
+    intr.interpret_file(args.progfile, args.verbose, args.output)
 
 if __name__ == "__main__":
     main()
