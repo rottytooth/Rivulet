@@ -1,5 +1,17 @@
 # Tutorial: A Fibonacci program
 
+## Table of Contents
+- [Value Strands](#value-strands)
+- [Using the Print argument to debug](#using-the-print-argument-to-debug)
+- [Starting state](#starting-state)
+- [Begin a block of code](#begin-a-block-of-code)
+- [Splitting code into glyphs](#splitting-code-into-glyphs)
+- [Moving data from other cells](#moving-data-from-other-cells) 
+- [Actions other than Add/Assignment](#actions-other-than-add-assignment)
+- [List Actions](#list-actions)
+- [A While loop](#a-while-loop)
+- [Final steps and testing](#final-steps-and-testing)
+
 ## Value Strands
 
 To get started, we'll need to look at how to write values in Rivulet.
