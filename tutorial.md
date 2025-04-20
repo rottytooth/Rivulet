@@ -78,6 +78,7 @@ The last strand (excerpted below) moves lower in the glyph, incorporating higher
 
 (1 * 3) + (-2 * 5) + (1 * 7)
 ```
+Note that this starting hook is two characters: `╶` and `╮` as is the norm with hooks facing to the left or right. The extra half-line makes the hook more visible and the strand easier to read. They are often omitted in hooks facing up or down, which are drawn larger in most typefaces.
 
 ## Starting state
 
@@ -310,9 +311,7 @@ Our "print" step requires actions that apply to lists:
 ```
 list1 pop/appends list2[0]
 ```
-Popping `list2[0]` is considered a cell-based action since it can't be completed without the cell number as a parameter. But appending to a list is list-based since it always refers to the end, not a particular cell. 
-
-We are writing to a list, so this is a list action. However, the parameter is a single cell `list2[0]`, so it is not a list2list action. This is marked by an action strand that ends with a horizontal movement.
+Popping `list2[0]` is considered a cell-based action since it can't be completed without the cell number as a parameter. But appending to a list is list-based since it always refers to the end of a list, not a particular cell. This makes it a list action but not a list2list action. We mark this by ending our action strand with a horizontal movement.
 
 To find the correct value of the action strand we need, we check the [syntax reference](syntax.md#action-strands). `pop_and_append` has a value of 3, which we write vertically:
 ```
@@ -325,7 +324,7 @@ To find the correct value of the action strand we need, we check the [syntax ref
 13   ╰─╷
 ```
 
-Had we marked this as list2list (ending the action strand with a ref indicator), it would append the entirety of `list2` to `list1`, leaving `list2` empty.
+Had we marked this as list2list, we would have ended the action strand with a ref indicator (a half-blank followed by half-line: `╵╷╴╶` ), with no preference for vertical or horizontal ending. That would append the entirety of `list2` to `list1`, leaving `list2` empty.
 
 ## A While Loop
 
@@ -405,3 +404,8 @@ We still have one more result to print, waiting in list2. We push this to list 1
 Once all the glyphs are written, we can re-assess them and move strands around between glyphs to simplify or combine them. The objective is to find harmony in the program: to edit glyphs that don't complement the stylistic consensus emerging in the edit. Through this process, we can continually re-evaluate with `-p`, ensuring each glyph is still set to perform the correct tasks.
 
 Final debugging can be done with the `-v` indicator (for verbose). In this debug mode, the interpreter reports back the state of the stacks after each glyph runs.
+
+Once we are happy with our program, we can generate an svg of it with the arguments `--svg` and optionally `--theme` to set the theme to `monokai`, `pacman`, or another definied in the `riv_themes.py` file. Here is a complete Fibonacci program in pacman:
+
+<img src="images/fib1_pacman.svg"> 
+
