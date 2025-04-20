@@ -37,14 +37,15 @@ Fibonacci 1 | Fibonacci 2 | Fibonacci 4
 :-------------------------:|:-------------------------:|:-------------------------:
 <img src="images/fibonacci1.png">  | <img src="images/fibonacci2.png"> | <img src="images/fibonacci4.png">
 
+## Documentation
+Alongside this introduction, you should find:
+- [Tutorial](tutorial.md): The easiest way to get started
+- [Syntax Reference](syntax.md)
+
 ## Table of Contents
 - [Design Philosophy](#design-philosophy)
 - [Data Model](#data-model)
 - [Control Flow](#control-flow)
-
-## Documentation
-- The easiest way to get started is with the [Tutorial](tutorial.md)
-- A full [Syntax Reference](syntax.md)
 
 | :warning: WARNING          |
 |:---------------------------|
@@ -66,7 +67,7 @@ The first list, List 1, is sometimes used as the output stream. This is an inter
 
 ## Control Flow
 
-Every strand of every glyph runs in a Rivulet program; there is no equivalent of an "if" statement. If a glyph leads to an unwanted state, that glyph and the others of its block (all contiguous glyphs of the same level or higher), can be rolled back, setting the execution state to what it was before the glyph (or set of glyphs) fired. The conditional rollback is the only form of branching in Rivulet. Loops only end with a rollback of their last iteration. Tests for rollback are that a single cell or an entire list is either zero or non-zero, indicated by a special strand called the Question Strand.
+Every strand of every glyph runs in a Rivulet program; there is no equivalent of an "if" statement. If a glyph leads to an unwanted state, that glyph and the others of its block (all contiguous glyphs of the same level or higher), can be rolled back, setting the execution state to what it had been previously. The conditional rollback is the only form of branching in Rivulet. Loops only end with a rollback of their last iteration. Tests for rollback are that a single cell or an entire list is zero, indicated by a special set of strands called Question Strands.
 
-Data strands are run in the order they begin at the top left, moving through each column flowing to the right. So the strand beginning at coordinate 2,0 is run, then 2,1, then 3,0, and so on. Question strands are always run after the data strands are executed.
+Data strands are run in the order they begin at the top left, moving through each column flowing to the right. So the strand beginning at coordinate [2,0] is run, then [2,1], then [3,0], and so on. Question strands are always run after all data strands from the same glyph are executed.
 

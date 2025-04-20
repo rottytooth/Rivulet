@@ -117,7 +117,7 @@ The default command is addition assignment ( += ). To choose another commands, w
 
 | :note: Contibutors: |
 |:---------------------------|
-| The list of actions is still very sparse. If you find commands are missing that you need, please create issues for them. |
+| The list of actions is still very sparse. This is intentional, to see how people use the language. If you find commands are missing that you need, please create issues for them. |
 
 Action Strands have hooks that point down or to the right. They sit directly below the data strand they apply to. If two data strands' hooks are aligned vertically, the top action strand applies to the top data strand, the second to the second, etc.
 
@@ -144,7 +144,7 @@ The action strands each have a value of 4, which corresponds to exponentiation_a
 | -1 | subtraction assignment | |
 | 2 | multiplication assignment | |
 | -2 | division assignment | |
-| 3 | no-op | TBD; currently only has value when assigned to list |
+| 3 | pop / pop_and_append | Removes from source list. With a list indicator, it pops from the assignee  |
 | -3 | mod assignment | modulus of cell value against supplied argument |
 | 4 | exponentiation assignment | raise to power of supplied argument" |
 | -4 | root assignment | take root at power of supplied argument |
@@ -160,17 +160,54 @@ Here is an example of two action strands and their numbering:
     ╰─╯       ╰─╯
     5 3 2 1   1 2
 
-The first strand has a value of: (1 - 2 + 2*3 - 5) = 2, multiplication assignment. The second strand has a value of (2 * 1) - (2 * 2) = -2, division assignment.
+The first strand has a value of: `(1 * 1) + (-1 * 2) + (2 * 3) + (-1 * 5) == 0`, overwrite. The second strand has a value of `(2 * 1) + (-2 * 2) == -2`, division assignment.
 
 ### List indicator
 
-Action strands can also mark that a command applies not to a single cell (as is the default) but to an entire list. This is indicated by ending an action strand with a horizontal movement. When a list indicator appears, the data strand maintains the same order as if it were its cell that updates. If cell 3 has an action strand, it is still run after cell 2 and before cell 4 strands.
+Action strands can also mark that a command applies not to a single cell (as is the default) but to an entire list. 
+
+This means that, for many actions, every cell in that list is assigned to, as if a single lambda were applied to every element. 
+
+Some actions, however, have alternate readings if applied to a list. The number 1 for instance:
+
+```
+Cell reading:
+    "name": "insert",
+    "note": "inserts value after indicated cell (applied immediately)"
+
+List reading:
+    "name": "append",
+    "note": "appends value to list"
+```
+The List indicator turns an action that requires an individual cell as referrent (showing where a new value should be inserted), into one that considers the list as a whole (append).
+
+The list indicator is at the back of the action strand. It ends with a horizontal movement `─` in either direction. 
+
+While a list indicator disassociates from any individual cell in terms of reading, the order it is read is still read in order: left-to-right, then up-down.
 
 ### List 2 List
 
-If an action strand ends with a location marker (the tiny gap), it shows that the action should be applied for every cell of the referenced list to every cell of the assigned list. This is only syntactically valid when the data strand also ends with a location marker (is a reference strand).
+If an action strand ends with a location marker (the tiny gap), it shows that the action should be applied for every cell of the referenced list to every cell of the assigned list. 
+
+This is only syntactically valid when the data strand also ends with a location marker (is a reference strand).
 
 Every cell with a number in the second list is applied to the cells in the first.
+
+```
+    list1[0] = list1[0]
+    // vertical end of action strand
+```
+With a basic action strand is just an assignment of one cell to another.
+```
+    list1[...] = list1[0]
+    // horizontal end of action strand
+```
+With an action strand ending with a `─` in either direction.
+```
+    list1[...] = list1[...]
+    // ref marker at end of action strand
+```
+With an action strand ending with a half-line, either horizontal or vertical in either direction: `╷╵╴╶`
 
 ## Question Strand Sets
 
