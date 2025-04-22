@@ -23,7 +23,7 @@ To get started, we'll need to look at how to write values in Rivulet.
 7           ╰─ ╷
 ```
 
-This excerpt above is a single *glyph*, meaning a block of code that executes together. It is marked with ╵ in the upper left corner and ╷ in the bottom right. It has four *strands*, continuous lines made up of psudographic characters. We determine their reading by checking the *hooks* they begin with (the short curve that begins the strand). 
+This excerpt above is a single *glyph*, meaning a block of code that executes together. It is marked with ╵ in the upper left corner and ╷ in the bottom right. It has four *strands*, continuous lines made up of pseudographic characters. We determine their reading by checking the *hooks* they begin with (the short curve that begins the strand). 
 
 Here are just the hooks, with dashed lines showing the direction the strand flows away from each:
 ```
