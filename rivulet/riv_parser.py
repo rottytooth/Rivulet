@@ -6,7 +6,6 @@ from pathlib import Path
 from rivulet.riv_exceptions import InternalError, RivuletSyntaxError
 # pylint: disable=locally-disabled, fixme, line-too-long
 
-VERSION = "0.1"
 
 def _chars_in_list(list1, list2):
     retset = []
@@ -51,7 +50,7 @@ class Parser:
         return retlist
 
 
-    def _get_neighbor(self, x, y, dirtn, glyph, include_coords=False):
+    def __get_neighbor(self, x, y, dirtn, glyph, include_coords=False):
         if dirtn == "up" and y > 0:
             if include_coords:
                 return {"symbol": glyph[y-1][x], "x": x, "y": y-1}
@@ -72,7 +71,7 @@ class Parser:
         return None
 
 
-    def _find_successful_matches(self, x, y, glyph, readings):
+    def __find_successful_matches(self, x, y, glyph, readings):
         "Find directions where there is a continuing character on the other side of a sign"
 
         successful_matches = []
@@ -87,7 +86,7 @@ class Parser:
             return None
 
         for direction in reading[0]["dir"]:
-            neighbor = self._get_neighbor(x, y, direction, glyph)
+            neighbor = self.__get_neighbor(x, y, direction, glyph)
             if not neighbor:
                 continue
 
@@ -106,7 +105,7 @@ class Parser:
         return successful_matches
 
 
-    def _check_is_start(self, x, y, glyph):
+    def __check_is_start(self, x, y, glyph):
 
         symbol = [l for l in self.lexicon if glyph[y][x] in l["symbol"]]
 
@@ -120,7 +119,7 @@ class Parser:
         if not any(r["pos"] == "start" for r in readings):
             return None
 
-        successful_matches = self._find_successful_matches(x, y, glyph, readings)
+        successful_matches = self.__find_successful_matches(x, y, glyph, readings)
 
         if len(successful_matches) != 1:
             return None
@@ -148,17 +147,17 @@ class Parser:
         }
 
 
-    def _find_strand_starts(self, glyph):
+    def __find_strand_starts(self, glyph):
         starts = []
         for y in enumerate(glyph):
             for x in enumerate(glyph[y[0]]):
-                token = self._check_is_start(x[0], y[0], glyph)
+                token = self.__check_is_start(x[0], y[0], glyph)
                 if token:
                     starts.append(token)
         return starts
 
 
-    def _interpret_strand(self, glyph, prev, start):
+    def __interpret_strand(self, glyph, prev, start):
         """Recursively follow the data strand to determine build out its value and determine its subtype (value vs ref if data strand etc). 
         
         Parameters:
@@ -169,7 +168,7 @@ class Parser:
         """
         # At the beginning of a strand, prev is the hook which begins it (and never has any other reading).
         # We already know the direction prev is pointing, so we can look for the next character in that direction and mark as curr.
-        curr = self._get_neighbor(prev["x"], prev["y"], prev["dir"], glyph, include_coords=True)
+        curr = self.__get_neighbor(prev["x"], prev["y"], prev["dir"], glyph, include_coords=True)
 
         if "cells" not in start:
             start["cells"] = []
@@ -228,7 +227,7 @@ class Parser:
         if "end" in readings or "loc_marker" in readings:
             if next_dir:
                 # does the strand end here
-                following = [i for i in self.lexicon if self._get_neighbor(curr['x'], curr['y'], next_dir, glyph) in i['symbol']]
+                following = [i for i in self.lexicon if self.__get_neighbor(curr['x'], curr['y'], next_dir, glyph) in i['symbol']]
 
                 # there should only be one
                 if following:
@@ -245,23 +244,20 @@ class Parser:
                 or not ("continue" in readings and has_connecting_sign):
 
                 # WE ARE AT THE END of the strand
-                self._mark_end(start, curr, next_dir, prev, readings)
+                self.__mark_end(start, curr, next_dir, prev, readings)
                 return
 
         # if it continues, load the next character
         if ("continue" in readings or "corner" in readings) and next_dir:
             curr["dir"] = next_dir
-            self._interpret_strand(glyph, curr, start)
+            self.__interpret_strand(glyph, curr, start)
             return
 
         raise RivuletSyntaxError(f"No valid reading found for char {curr['x']}, {curr['y']}")
 
 
-    def _mark_end(self, start, curr, next_dir, prev, readings):
+    def __mark_end(self, start, curr, next_dir, prev, readings):
         "Determine what kind of strand we have and null out anything irrelevant to its reading"
-
-        # if start["x"] == 31:
-        #     print("")
 
         if start["type"] == "question_marker":
             start['end_x'] = curr['x']
@@ -313,23 +309,23 @@ class Parser:
             del start["command"]["list"]
 
 
-    def _lex_glyph(self, glyph):
+    def __lex_glyph(self, glyph):
         "Returns collection of strands with their interpretations"
         #FIXME: should ensure that starts and ends are cleared OR TAKE PARAM
 
         # make glyph rectangular
         glyph = [ln + [' '] * (max([len(i) for i in glyph]) - len(ln)) for ln in glyph]
 
-        starts = self._find_strand_starts(glyph)
+        starts = self.__find_strand_starts(glyph)
         for s in starts:
-            self._interpret_strand(glyph, s, s)
+            self.__interpret_strand(glyph, s, s)
         return starts
 
 
-    def _has_continuation(self, x, y, program, dirtn):
+    def __has_continuation(self, x, y, program, dirtn):
         "Look for continuations, meant to rule out potential Starts and Ends"
         try:
-            neighbor = self._get_neighbor(x, y, dirtn, program, include_coords=True)
+            neighbor = self.__get_neighbor(x, y, dirtn, program, include_coords=True)
         except IndexError:
             return False # if we are at the edge of the glyph, we can't have a continuation
         if neighbor:
@@ -341,7 +337,7 @@ class Parser:
         return False
 
 
-    def _match_starts_ends(self, starts, ends):
+    def __match_starts_ends(self, starts, ends):
         matches = []
         for e in ends:
             # build possible Starts for this End
@@ -375,7 +371,7 @@ class Parser:
         return sorted(matches, key=lambda x: (x["start"]['y'], x["start"]['x']))
 
 
-    def _locate_glyphs(self, program):
+    def __locate_glyphs(self, program):
         """Find all the Starts and Ends where:
             - everything in the col left of Start down to End is blank
             - everything in the row below End back to Start is blank
@@ -392,8 +388,8 @@ class Parser:
                 # it does not have a continuation up or down
                 if (x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph")) \
                 \
-                and not self._has_continuation(x, y, program, "up") \
-                and not self._has_continuation(x, y, program, "down"):
+                and not self.__has_continuation(x, y, program, "up") \
+                and not self.__has_continuation(x, y, program, "down"):
                     level = 1
                     if x > 0 and ln[x-1] in self.get_symbol_by_name("start_glyph"):
                         # find the level of the glyph by walking to the left
@@ -405,14 +401,14 @@ class Parser:
                     starts.append({"y":y, "x":x, "level":level})
 
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
-                if not self._has_continuation(x, y, program, "down") and not self._has_continuation(x, y, program, "up"):
+                if not self.__has_continuation(x, y, program, "down") and not self.__has_continuation(x, y, program, "up"):
                     ends.append({"y":y, "x":x})
 
         # now we have a list of possible starts and ends, pass to match them
-        return self._match_starts_ends(starts, ends)
+        return self.__match_starts_ends(starts, ends)
 
 
-    def _load_primes(self, glyphs):
+    def __load_primes(self, glyphs):
         "Load a list of primes up to the length of the longest dimension of any glyph"
         self.primes = [1]
         primes_to_count = max( \
@@ -426,7 +422,7 @@ class Parser:
                     break
 
 
-    def _remove_blank_lines(self, program):
+    def __remove_blank_lines(self, program):
         "Clear blank lines from top and bottom of a multi-line string"
         if program[0] == [] or set(program[0]) == {' '}:
             program = program[1:]
@@ -435,7 +431,7 @@ class Parser:
         return program
 
 
-    def _prepare_glyphs_for_lexing(self, glyph_locs, program):
+    def __prepare_glyphs_for_lexing(self, glyph_locs, program):
         "Returns a set of individual glyphs, each with its level, with the Starts and Ends removed"
         block_tree = []
         for g in glyph_locs:
@@ -453,7 +449,7 @@ class Parser:
         return block_tree
 
 
-    def _parse_glyphs(self, glyphs):
+    def __parse_glyphs(self, glyphs):
         "Arrange Strands in order to be run and fill out with what they assign to, what is tested, etc"
 
         for g, glyph in enumerate(glyphs):
@@ -514,7 +510,7 @@ class Parser:
                     first_qm["end_pos"] = last_marker_type["name"]
                     if first_qm["end_pos"] == "horizontal":
                         first_qm["applies_to"] = "list"
-                        first_qm["ref_list"] = 3
+                        first_qm["ref_list"] = 3 # FIXME: wtf????
                         del first_qm["ref_cell"]
                     else:
                         first_qm["applies_to"] = "cell"
@@ -574,23 +570,23 @@ class Parser:
         # turn into a grid
         program = [list(ln) for ln in program.splitlines()]
 
-        program = self._remove_blank_lines(program)
-        glyph_locs = self._locate_glyphs(program)
+        program = self.__remove_blank_lines(program)
+        glyph_locs = self.__locate_glyphs(program)
 
         if not glyph_locs:
             raise RivuletSyntaxError("No glyph found")
 
-        glyphs = self._prepare_glyphs_for_lexing(glyph_locs, program)
+        glyphs = self.__prepare_glyphs_for_lexing(glyph_locs, program)
 
         # now that we know the size of the largest glyph, we calculate
         # the primes for the whole program
-        self._load_primes(glyphs)
+        self.__load_primes(glyphs)
 
         for glyph in glyphs:
-            glyph["tokens"] = self._lex_glyph(glyph["glyph"])
+            glyph["tokens"] = self.__lex_glyph(glyph["glyph"])
 
         # re-arranges and decorates the tokens for each glyph in place
-        self._parse_glyphs(glyphs)
+        self.__parse_glyphs(glyphs)
 
         for g in glyphs:
             g["list_size"] = len(g["glyph"])

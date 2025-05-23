@@ -82,7 +82,7 @@ class Interpreter:
 
         self.__decorate_blocks(parse_tree, 0, None)
 
-        self.__interpret_block(parse_tree, state)
+        self.__interpret_block(parse_tree, state, debug)
 
         if 1 in state:
             if self.output == Interpreter.OutputOption.unicode:
@@ -90,8 +90,8 @@ class Interpreter:
             elif self.output == Interpreter.OutputOption.numeric:
                 print(" ".join(str(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
 
-        if debug:
-            debug(parse_tree, state)
+        # if debug:
+        #     debug(parse_tree, state)
 
     def treeify_glyphs(self, glyphs, curr_level, tree):
         "Reorganize a flat list of glyphs into a tree by level"
@@ -141,7 +141,7 @@ class Interpreter:
                 self.__decorate_blocks(g, level + 1, following)
 
 
-    def __interpret_block(self, parse_tree, state):
+    def __interpret_block(self, parse_tree, state, debug = False):
 
         rollback_state = json.loads(json.dumps(state))
 
@@ -149,7 +149,7 @@ class Interpreter:
             if isinstance(g, list):
                 self.__interpret_block(g, state)
             else:
-                action = self.__interpret_glyph(g, state)
+                action = self.__interpret_glyph(g, state, debug)
                 if action == self.Action.rollback:
                     state = json.loads(json.dumps(rollback_state))
                     return # a rollback also exits the block
@@ -159,7 +159,7 @@ class Interpreter:
                     self.__interpret_block(parse_tree, state)
 
 
-    def __interpret_glyph(self, glyph, state) -> Action:
+    def __interpret_glyph(self, glyph, state, debug = False) -> Action:
 
         retval = self.Action.cont
 
@@ -169,8 +169,10 @@ class Interpreter:
             else: # is a value or a ref marker
 
                 # if the cell is not in the list, initialize it to zero
-                if 'assign_to_cell' in token and len(state[token['list']]) == token['assign_to_cell'] and \
-                    (not token["action"] or not "command" in token["action"] or not token["action"]["command"] in ["pop_and_append","append"]):
+                if 'assign_to_cell' in token and \
+                    len(state[token['list']]) == token['assign_to_cell'] and \
+                        (not token["action"] or not "command" in token["action"] or \
+                        not token["action"]["command"] in ["pop_and_append","append"]):
                     state[token['list']].append(0)
                 # elif 'assign_to_cell' in token and len(state[token['list']]) < token['assign_to_cell']:
                 #     # shouldn't be possible
@@ -178,11 +180,13 @@ class Interpreter:
 
                 source = None
 
-                list2list = not token["action"] is None and "subtype" in token["action"] and token["action"]["subtype"] == "list2list"
+                list2list = not token["action"] is None and \
+                    "subtype" in token["action"] and \
+                    token["action"]["subtype"] == "list2list"
 
                 # find source item
                 if list2list:
-                    source = state[token["ref_list"]]
+                    source = state[token["ref_cell"]]
                 if token["subtype"] == "value":
                     source = token["value"]
                 elif token["subtype"] == "ref":
@@ -218,6 +222,8 @@ class Interpreter:
                 else:
                     state[token["list"]][token["assign_to_cell"]] = self.__resolve_cmd(token, state[token["list"]][token["assign_to_cell"]], source)
 
+        if debug:
+            debug(json.loads(json.dumps(state)))
         if self.verbose:
             print(self.debug.glyph_drawn(glyph["glyph"]))
             print(self.debug.glyph_pseudo(glyph))

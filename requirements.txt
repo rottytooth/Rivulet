@@ -1,6 +1,7 @@
 iniconfig==2.0.0
-packaging==24.2
-pluggy==1.5.0
+packaging==25.0
+pluggy==1.6.0
 ply==3.11
 pytest==8.3.5
-svg.py==1.6.0
+pytest-asyncio==0.26.0
+svg.py==1.5.0
