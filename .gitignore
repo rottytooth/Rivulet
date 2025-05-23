@@ -15,3 +15,5 @@ venv
 .venv
 pyvenv.cfg
 *.egg-info/
+
+test_progs

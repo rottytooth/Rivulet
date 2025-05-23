@@ -45,21 +45,25 @@ class Interpreter:
         return self.interpret_program(program, verbose)
     
 
-    def interpret_program(self, program, verbose):
-        "Interpret a Rivulet program passed by text"
+    def interpret_program(self, program:str, verbose:bool, debug = None):
+        """Interpret a Rivulet program passed by text
+        
+        program: program text as string
+        verbose: flag
+        debug: callback function called in the processing of each glyph
+        """
         self.verbose = verbose
 
         parser = Parser()
 
         glyphs = parser.parse_program(program)
 
-        self.__interpret(glyphs)
+        self.__interpret(glyphs, debug)
 
-    
-    def __interpret(self, glyphs):
+
+    def __interpret(self, glyphs, debug = None):
         state = dict([(1,[])])
 
-        prime_size = 0
         prime_size = max(glyphs, key=lambda x: x["list_size"])["list_size"]
 
         # initialize state with lists required
@@ -84,7 +88,10 @@ class Interpreter:
             if self.output == Interpreter.OutputOption.unicode:
                 print("".join(chr(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
             elif self.output == Interpreter.OutputOption.numeric:
-                print(" ".join(str(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))        
+                print(" ".join(str(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
+
+        if debug:
+            debug(parse_tree, state)
 
     def treeify_glyphs(self, glyphs, curr_level, tree):
         "Reorganize a flat list of glyphs into a tree by level"
@@ -181,9 +188,12 @@ class Interpreter:
                 elif token["subtype"] == "ref":
                     if token["ref_cell"][0] >= len(token):
                         raise RivuletSyntaxError("List reference out of bounds")
+
                     if token["ref_cell"][1] >= len(state[token["ref_cell"][0]]):
-                        raise RivuletSyntaxError("Cell reference out of bounds")
-                    source = state[token["ref_cell"][0]][token["ref_cell"][1]]
+                        # this cell has not yet been populated
+                        source = 0
+                    else:
+                        source = state[token["ref_cell"][0]][token["ref_cell"][1]]
 
                 # find item to apply to
                 if list2list:
