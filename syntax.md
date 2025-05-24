@@ -226,27 +226,31 @@ The list indicator does not change the strand's precedence. So it is read in the
 
 ### List 2 List
 
-If an action strand ends with a location marker (the tiny gap), it shows that the action should be applied for every cell of the referenced list to every cell of the assigned list. 
+This variation of the List Action Strand applies each cell of one list to each of the other. A simple assignment would look like this:
+```
+listX[0] = listY[0]
+listX[1] = listY[1]
+listX[2] = listY[2]
+...
+listX.append(listY[36])
+(for however many elements listY is longer than listX)
+```
+This can apply to any type of Action Strand, not just simple assignments. These take the list version of the action.
 
-This is only syntactically valid when the data strand also ends with a location marker (is a reference strand).
+*Example:*
+```
+ 1 ╵                    ╶╮
+ 2  ╵╰──╮                │
+ 3  │   ╰────            │
+ 5  │  ╭────╮╭────╮╭───╮ │
+ 7  │  ╷╶╮╵╶╯╷╶╮╵╶╯╷╶╮╶╯ ╷
+11  │╭───╯╰────╯╰────╯   ╭╴
+13  │╷ ╶╮              ╵ │
+17  ╰───╯              │ │ 
+19                     ╰─╯ ╷
+```
 
-Every cell with a number in the second list is applied to the cells in the first.
-
-```
-    list1[0] = list1[0]
-    // vertical end of action strand
-```
-With a basic action strand is just an assignment of one cell to another.
-```
-    list1[...] = list1[0]
-    // horizontal end of action strand
-```
-With an action strand ending with a `─` in either direction.
-```
-    list1[...] = list1[...]
-    // ref marker at end of action strand
-```
-With an action strand ending with a half-line, either horizontal or vertical in either direction: `╷╵╴╶`
+The ref strand to the far right and its list2list action sitting below copy the entire contents of `list7` to `list1`.
 
 ## Question Strand Sets
 
