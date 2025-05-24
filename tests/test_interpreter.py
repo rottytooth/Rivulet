@@ -14,7 +14,7 @@ def test_treeify_1_3_3():
     ]
 
     int = Interpreter()
-    tree = int.treeify_glyphs(set_one, 1, [])
+    tree = int._Interpreter__treeify_glyphs(set_one, 1, [])
     assert len(tree) == 2
     assert isinstance(tree[1], list)
     assert len(tree[1]) == 1
@@ -33,7 +33,7 @@ def test_treeify_1_3_2_2_3_3_1():
     ]
 
     int = Interpreter()
-    tree = int.treeify_glyphs(set_one, 1, [])
+    tree = int._Interpreter__treeify_glyphs(set_one, 1, [])
     assert len(tree) == 3
     assert not isinstance(tree[0], list)
     assert isinstance(tree[1], list)
@@ -165,12 +165,99 @@ def test_pop_append_basic():
 
     int.interpret_program(str(pop_append_basic), False, callback)
 
-    # assert len(st) > 1
-    # assert len(st[1]) > 1
-
     # first iteration, data is loaded
     assert st[0]['1'] == [2, -9, 14]
 
     # second time, the 2 should be moved from list1 to list2
     assert st[1]['1'] == [-9, 14]
     assert st[1]['2'] == [2]
+
+fibonacci1 = """
+ 1 ╵──╮───╮╭─    ╵╵╭────────╮
+ 2  ╰─╯╰──╯│       ╰─╶ ╶╮╶╮╶╯
+ 3 ╰─────╮ │      ╭─────╯ ╰─────╮
+ 5       ╰─╯ ╷    ╰───       ───╯╷
+
+ 1 ╵╵─╮  ╭─╮     ╭──       ╵╵╰─╮  ──╮──╮
+ 2    ╰─╮│ ╰─╯ ╵╵╰─╯╶╮       ╴─╯  ╭─╯╭─╯
+ 3    ╰─╯╰─ ╰──╯╰────╯       ╭╴ ╵╶╯ ╶╯╶╮
+ 5      ╭─╮ ╭╴               │  ╰──────╯
+ 7      │ │ │                ╰─╮       ╭─╮ 
+11    │ │ ╰─╯                  │     │   │
+13    ╰─╯            ╷         ╰──── ╰───╯╷
+
+ 1 ╵╵ ╭──  ──╮  ╭─╮         ╵╰─╮
+ 2    ╰─╮  ╭─╯╭─╯ │          ╴─╯
+ 3     ╶╯╵╶╯  │ ╷╶╯          ╭─╮
+ 5   ╭─╮ ╰────╯ │   ╭─╮        │
+ 7   │ ╰────╮ ╭─╯ ╭╴│ │      ╭─╯
+11   ╰────╮ │ │ │ │ │ │      │
+13   ╭────╯ │ │ ╰─╯ │ ╷      ╰─╷
+17   ╰────╮ │ ╰─────╯ │  
+19        │ ╰─────────╯╷
+"""
+
+def test_fibonacci():
+    "Complete fibonacci example, first version"
+    int = Interpreter()
+    st = None
+
+    def callback(state):
+        nonlocal st
+        st = state
+
+    int.interpret_program(str(fibonacci1), False, callback)
+
+    # val cell is never populated
+    assert len(st) > 0
+    assert st['1'] == [0, 1, 1, 2, 3, 5, 8, 13, 21]
+
+list2list_basic = """
+ 1 ╵                    ╶╮
+ 2  ╵╰──╮                │
+ 3  │   ╰────            │
+ 5  │  ╭────╮╭────╮╭───╮ │
+ 7  │  ╷╶╮╵╶╯╷╶╮╵╶╯╷╶╮╶╯ ╷
+11  │╭───╯╰────╯╰────╯   ╭╴
+13  │╷ ╶╮              ╵ │
+17  ╰───╯              │ │ 
+19                     ╰─╯ ╷
+"""
+def test_list2list_basic():
+    "Basic list to list action"
+    int = Interpreter()
+    st = []
+
+    def callback(state):
+        nonlocal st
+        st = state
+
+    int.interpret_program(str(list2list_basic), False, callback)
+
+    # first iteration, data is loaded
+    assert st['1'] == [16, 16, 16, 16, 16, 16]
+
+cell_to_list1 = """
+ 1 ╵  ╶╮  ╶╮  ╶╮  ╶╮  ╶╮       
+ 2     ╰── ╰── ╰── ╰── │
+ 3  ╭── ╭──────────────╯
+ 5  │ ╭─╯              ╭╴
+ 7  │ ╷    ╶╮       ─╮ │
+11  │   ╭───╯        │ │
+13  │   ╷ ╶╮         ╰─╯
+17  ╰──────╯            ╷
+"""
+def test_cell_to_list1():
+    "Horizontal bar at end of action to invoke cell assigned to list"
+    int = Interpreter()
+    st = []
+
+    def callback(state):
+        nonlocal st
+        st = state
+
+    int.interpret_program(str(cell_to_list1), False, callback)
+
+    # first iteration, data is loaded
+    assert st['1'] == [-96, -96, -96, -96, -96]
+

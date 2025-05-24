@@ -49,7 +49,7 @@ Alongside this introduction, you should find:
 
 | :warning: WARNING          |
 |:---------------------------|
-| **Status: Version 0.4**. This is a mostly-working interpreter, and a tool to generate svg files of source code. The command list will likely need to expand for usability. |
+| **Status:** This is a mostly-working interpreter, and a tool to generate svg files of source code. The command list will likely need to expand for usability. |
 
 ## Design Philosophy
 

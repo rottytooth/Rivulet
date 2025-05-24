@@ -76,6 +76,19 @@ def test__locate_glyphs_with_partial_start():
     assert(glyph_locs[0]['start'] == {"y": 0, "x": 0})
     assert(glyph_locs[0]['end'] == {"y": 3, "x": 12})
 
+glyph_with_line_end_just_after_start_marker = """
+ 1 ╵
+ 2  ╵╰──╮    
+ 3  │   ╰────
+"""
+def test__glyph_with_line_end_just_after_start_marker():
+    intr = Parser()
+    gl = _prepare(glyph_with_partial_start)
+    gl = intr._Parser__remove_blank_lines(gl)
+    glyph_locs = intr._Parser__locate_glyphs(gl)
+    assert(len(glyph_locs) == 1)
+    assert(glyph_locs[0]['start'] == {"y": 0, "x": 0})
+
 
 glyph_with_partial_start_bottom = """
 ╵  ╰──╮ ╮

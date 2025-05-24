@@ -161,11 +161,55 @@ The first strand has a value of: `(1 * 1) + (-1 * 2) + (2 * 3) + (-1 * 5) == 0`,
 
 ### List indicator
 
-Action strands can also mark that a command applies not to a single cell (as is the default) but to an entire list. 
+Action strands can also mark that a command applies not to a single cell (as is the default) but to an entire list. It is marked by the last character of an action strand. Ending on a horizontal movement `─` in either direction. 
 
-This means that, for many actions, every cell in that list is assigned to, as if a single lambda were applied to every element. 
+*Example:*
 
-Some actions, however, have alternate readings if applied to a list. The number 1 for instance:
+```
+ 1 ╵  ╶╮  ╶╮  ╶╮  ╶╮  ╶╮       
+ 2     ╰── ╰── ╰── ╰── │
+ 3  ╭── ╭──────────────╯
+ 5  │ ╭─╯              ╭╴
+ 7  │ ╷    ╶╮       ─╮ │
+11  │   ╭───╯        │ │
+13  │   ╷ ╶╮         ╰─╯
+17  ╰──────╯            ╷
+```
+The first value assigned is a 4 to `list1`. This will then be assigned to the next three:
+```
+ 1    ╶╮  ╶╮  ╶╮  ╶╮         
+ 2     ╰── ╰── ╰── ╰──
+```
+Just after the first 4 is assigned, `list3` is assigned the value -96 ((-6 * 17) + (2 * 3)) to `list13`. That value is soon after copied to `list7`:
+
+```
+ 1       
+ 2    
+ 3  ╭──  
+ 5  │ 
+ 7  │      ╶╮
+11  │   ╭───╯
+13  │   ╷ ╶╮
+17  ╰──────╯
+```
+The two remaining strands are a ref and action strand combination:
+```
+ 1                    ╶╮       
+ 2                     │
+ 3      ╭──────────────╯
+ 5    ╭─╯              ╭╴
+ 7    ╷             ─╮ │
+11                   │ │
+13                   ╰─╯
+17                      
+```
+The horizontal line at the end of the action strand (on line 7) indicates that it applies to the entire list (`list1`). This includes every cell of `list1` that already has a value. In this case, it is currently `[4, 4, 4, 4]`, so all of those will be affected by this action. Had the list contained zeros, those would be manipulated as well.
+
+However, since there is no `list2list` indicator, it's only a single value that's the source (input) of this action. And since it's a ref strand, not a val strand, on top, it refers to a single value: in this case, the -96 from the first cell of `list7`.
+
+This action is an overwrite, so the resulting values in `list` are `[-96, -96, -96, -96]`.
+
+Most actions are similar to the example in that it's the same action as a cell-to-cell action, only applied to every cell of a list, like a map() lambda. Some actions, however, have alternate readings if applied to a list. The number 1 for instance:
 
 ```
 Cell reading:
@@ -176,11 +220,9 @@ List reading:
     "name": "append",
     "note": "appends value to list"
 ```
-The List indicator turns an action that requires an individual cell as referrent (showing where a new value should be inserted), into one that considers the list as a whole (append).
+The List indicator, in this case, turns an action that requires an individual cell as referrent (showing where a new value should be inserted), into one that considers the list as a whole (append).
 
-The list indicator is at the back of the action strand. It ends with a horizontal movement `─` in either direction. 
-
-While a list indicator disassociates from any individual cell in terms of reading, the order it is read is still read in order: left-to-right, then up-down.
+The list indicator does not change the strand's precedence. So it is read in the same order, from left-to-right, alongside ordinary ref and val strands. Which cell in the list it points to does not affect its reading. This sometimes gives flexibility in where it is drawn, but in many cases, including the example above, it is constrained both by the cell it refers to and when in the glyph it needs to be executed.
 
 ### List 2 List
 

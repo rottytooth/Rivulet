@@ -78,7 +78,7 @@ class Interpreter:
         for idx, g in enumerate(glyphs):
             g["id"] = idx
 
-        parse_tree = self.treeify_glyphs(json.loads(json.dumps(glyphs)), 1, [])
+        parse_tree = self.__treeify_glyphs(json.loads(json.dumps(glyphs)), 1, [])
 
         self.__decorate_blocks(parse_tree, 0, None)
 
@@ -93,20 +93,20 @@ class Interpreter:
         # if debug:
         #     debug(parse_tree, state)
 
-    def treeify_glyphs(self, glyphs, curr_level, tree):
+    def __treeify_glyphs(self, glyphs, curr_level, tree):
         "Reorganize a flat list of glyphs into a tree by level"
         if glyphs[0]["level"] == curr_level:
             tree.append(glyphs.pop(0))
         elif glyphs[0]["level"] > curr_level:
             level = []
             tree.append(level)
-            self.treeify_glyphs(glyphs, curr_level + 1, level)
+            self.__treeify_glyphs(glyphs, curr_level + 1, level)
         else:
             # go back up one level
             return tree
 
         if len(glyphs) > 0:
-            self.treeify_glyphs(glyphs, curr_level, tree)
+            self.__treeify_glyphs(glyphs, curr_level, tree)
 
         return tree
 
@@ -186,11 +186,20 @@ class Interpreter:
 
                 # find source item
                 if list2list:
-                    source = state[token["ref_cell"]]
+                    # the token will have ref_cell but it's actually just the list,
+                    # the first value, that indicates this
+                    source = state[token["ref_cell"][0]]
                 if token["subtype"] == "value":
                     source = token["value"]
-                elif token["subtype"] == "ref":
-                    if token["ref_cell"][0] >= len(token):
+                elif token["subtype"] == "ref" and \
+                    (not "action" in token or not token["action"] or \
+                    not "subtype" in token["action"] or \
+                    not token["action"]["subtype"] or \
+                    token["action"]["subtype"] != "list2list"):
+                    # rule out list2list, which has a special case for source
+                    # FIXME: simpler way to test for all this?
+
+                    if not token["ref_cell"][0] in state:
                         raise RivuletSyntaxError("List reference out of bounds")
 
                     if token["ref_cell"][1] >= len(state[token["ref_cell"][0]]):
@@ -201,6 +210,9 @@ class Interpreter:
 
                 # find item to apply to
                 if list2list:
+                    for a in range(len(state[token["list"]]), len(source)):
+                        # append zeroes to create space for the new values
+                        state[token["list"]].append(0) 
                     for i in range(len(state[token["list"]])):
                         state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
                 elif token["action"] is None or "command" not in token["action"]:
