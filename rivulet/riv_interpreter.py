@@ -213,19 +213,8 @@ class Interpreter:
 
                 # find item to apply to
                 if list2list:
-                    # special case for pop/append
-                    # FIXME: there may be other cases where list2list requires the last item
-                    if token["action"]["command"] == "pop_and_append":
-                        if len(state[token["ref_cell"][0]]) == 0:
-                            state[token["list"]].append(0)
-                        else:
-                            state[token["list"]].append(state[token["ref_cell"][0]].pop(-1))
-                    else:
-                        for a in range(len(state[token["list"]]), len(source)):
-                            # append zeroes to create space for the new values
-                            state[token["list"]].append(0)
-                        for i in range(len(state[token["list"]])):
-                            state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
+                    for i in range(len(state[token["list"]])):
+                        state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
                 elif token["action"] is None or "command" not in token["action"]:
                     # defaults to add_assign
                     state[token["list"]][token["assign_to_cell"]] += source
