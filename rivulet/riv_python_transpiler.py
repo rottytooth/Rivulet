@@ -72,6 +72,8 @@ class PythonTranspiler:
                     a(f"list{token['list']}[{token['assign_to_cell']}] /= ")
                 elif token["action"]["command"] == "mod_assignment":
                     a(f"list{token['list']}[{token['assign_to_cell']}] %= ")
+                elif token["action"]["command"] == "reverse_mod_assignment":
+                    a(f"list{token['list']}[{token['assign_to_cell']}] rev %= ")
                 elif token["action"]["command"] == "exponent_assignment":
                     a(f"list{token['list']}[{token['assign_to_cell']}] ^= ")
                 elif token["action"]["command"] == "overwrite":
@@ -94,7 +96,12 @@ class PythonTranspiler:
             if token["subtype"] == "value":
                 a(str(token['value']))
             if token["subtype"] == "ref":
-                a(f"list{token['ref_cell'][0]}[{token['ref_cell'][1]}]")
+                if token["action"] and token["action"]["command"] == "pop_and_append" and (token["action"]["subtype"] == "list" or token["action"]["subtype"] == "list2list"):
+                    # in this case, we refer to the whole list
+                    # FIXME: there ought to be a flag for this in the command token
+                    a(f"list{token['ref_cell'][0]}")
+                else:
+                    a(f"list{token['ref_cell'][0]}[{token['ref_cell'][1]}]")
             a('',True)
 
             # if token["subtype"] == "value":

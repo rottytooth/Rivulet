@@ -12,6 +12,7 @@
     - [List Indicator](#list-indicator)
     - [List 2 List](#list-2-list)
 - [Question Strand Sets](#question-strand-sets)
+    - [Question for List vs Cell](#question-for-list-vs-cell)
 
 Rivulet's nuanced grammar may seem overwhelming at first but becomes easy to read and write with practice.
 
@@ -142,9 +143,13 @@ The action strands each have a value of 4, which corresponds to exponentiation_a
 | 2 | multiplication assignment | |
 | -2 | division assignment | |
 | 3 | pop / pop_and_append | Removes from source list. With a list indicator, it pops from the assignee  |
-| -3 | mod assignment | modulus of cell value against supplied argument |
+| -3 | addition_assignment | only for list indicators. Used when an action strand is needed
 | 4 | exponentiation assignment | raise to power of supplied argument" |
 | -4 | root assignment | take root at power of supplied argument |
+| 5 | mod assignment | modulus of cell value against supplied argument |
+| -5 | reverse mod assignment | modulus of supplied argument against cell value |
+| 6 | reverse subtraction | supplied argument minus cell value |
+| -6 | reverse division | |
 
 
 :WARNING: It is every-other-line that increments between the primes, as the vertical length for a block-drawing char is longer than their horizontal length. This sounds confusing but is usually clear visually.
@@ -161,11 +166,55 @@ The first strand has a value of: `(1 * 1) + (-1 * 2) + (2 * 3) + (-1 * 5) == 0`,
 
 ### List indicator
 
-Action strands can also mark that a command applies not to a single cell (as is the default) but to an entire list. 
+Action strands can also mark that a command applies not to a single cell (as is the default) but to an entire list. It is marked by the last character of an action strand. Ending on a horizontal movement `─` in either direction. 
 
-This means that, for many actions, every cell in that list is assigned to, as if a single lambda were applied to every element. 
+*Example:*
 
-Some actions, however, have alternate readings if applied to a list. The number 1 for instance:
+```
+ 1 ╵  ╶╮  ╶╮  ╶╮  ╶╮  ╶╮       
+ 2     ╰── ╰── ╰── ╰── │
+ 3  ╭── ╭──────────────╯
+ 5  │ ┌─╯              ╭╴
+ 7  │ ╷    ╶╮       ─┐ │
+11  │   ┌───╯        │ │
+13  │   ╷ ╶╮         ╰─╯
+17  ╰──────╯            ╷
+```
+The first value assigned is a 4 to `list1`. This will then be assigned to the next three:
+```
+ 1    ╶╮  ╶╮  ╶╮  ╶╮         
+ 2     ╰── ╰── ╰── ╰──
+```
+Just after the first 4 is assigned, `list3` is assigned the value -96 ((-6 * 17) + (2 * 3)) to `list13`. That value is soon after copied to `list7`:
+
+```
+ 1       
+ 2    
+ 3  ╭──  
+ 5  │ 
+ 7  │      ╶╮
+11  │   ╭───╯
+13  │   ╷ ╶╮
+17  ╰──────╯
+```
+The two remaining strands are a ref and action strand combination:
+```
+ 1                    ╶╮       
+ 2                     │
+ 3      ╭──────────────╯
+ 5    ╭─╯              ╭╴
+ 7    ╷             ─╮ │
+11                   │ │
+13                   ╰─╯
+17                      
+```
+The horizontal line at the end of the action strand (on line 7) indicates that it applies to the entire list (`list1`). This includes every cell of `list1` that already has a value. In this case, it is currently `[4, 4, 4, 4]`, so all of those will be affected by this action. Had the list contained zeros, those would be manipulated as well.
+
+However, since there is no `list2list` indicator, it's only a single value that's the source (input) of this action. And since it's a ref strand, not a val strand, on top, it refers to a single value: in this case, the -96 from the first cell of `list7`.
+
+This action is an overwrite, so the resulting values in `list` are `[-96, -96, -96, -96]`.
+
+Most actions are similar to the example in that it's the same action as a cell-to-cell action, only applied to every cell of a list, like a map() lambda. Some actions, however, have alternate readings if applied to a list. The number 1 for instance:
 
 ```
 Cell reading:
@@ -176,35 +225,37 @@ List reading:
     "name": "append",
     "note": "appends value to list"
 ```
-The List indicator turns an action that requires an individual cell as referrent (showing where a new value should be inserted), into one that considers the list as a whole (append).
+The List indicator, in this case, turns an action that requires an individual cell as referrent (showing where a new value should be inserted), into one that considers the list as a whole (append).
 
-The list indicator is at the back of the action strand. It ends with a horizontal movement `─` in either direction. 
-
-While a list indicator disassociates from any individual cell in terms of reading, the order it is read is still read in order: left-to-right, then up-down.
+The list indicator does not change the strand's precedence. So it is read in the same order, from left-to-right, alongside ordinary ref and val strands. Which cell in the list it points to does not affect its reading. This sometimes gives flexibility in where it is drawn, but in many cases, including the example above, it is constrained both by the cell it refers to and when in the glyph it needs to be executed.
 
 ### List 2 List
 
-If an action strand ends with a location marker (the tiny gap), it shows that the action should be applied for every cell of the referenced list to every cell of the assigned list. 
+This variation of the List Action Strand applies each cell of one list to each of the other. A simple assignment would look like this:
+```
+listX[0] = listY[0]
+listX[1] = listY[1]
+listX[2] = listY[2]
+...
+listX.append(listY[36])
+(for however many elements listY is longer than listX)
+```
+This can apply to any type of Action Strand, not just simple assignments. These take the list version of the action.
 
-This is only syntactically valid when the data strand also ends with a location marker (is a reference strand).
+*Example:*
+```
+ 1 ╵                    ╶╮
+ 2  ╵╰──╮                │
+ 3  │   ╰────            │
+ 5  │  ╭────╮╭────╮╭───╮ │
+ 7  │  ╷╶╮╵╶╯╷╶╮╵╶╯╷╶╮╶╯ ╷
+11  │╭───╯╰────╯╰────╯   ╭╴
+13  │╷ ╶╮              ╵ │
+17  ╰───╯              │ │ 
+19                     ╰─╯ ╷
+```
 
-Every cell with a number in the second list is applied to the cells in the first.
-
-```
-    list1[0] = list1[0]
-    // vertical end of action strand
-```
-With a basic action strand is just an assignment of one cell to another.
-```
-    list1[...] = list1[0]
-    // horizontal end of action strand
-```
-With an action strand ending with a `─` in either direction.
-```
-    list1[...] = list1[...]
-    // ref marker at end of action strand
-```
-With an action strand ending with a half-line, either horizontal or vertical in either direction: `╷╵╴╶`
+The ref strand to the far right and its list2list action sitting below copy the entire contents of `list7` to `list1`.
 
 ## Question Strand Sets
 
@@ -218,13 +269,17 @@ The bottom question strand begins directly above its partner. It too ends either
 
 Question strands, read only by their beginning vs end, can move back and forth through the glyph, filling in blank spaces. They are often decorative, gap-filling lines.
 
-Question lines always fail if an item is less than or equal to zero.
-
 | Top Line | Bottom Line | Use | Checks
 | --- | --- | --- | --- |
-| Left | Horizontal | If | List (all items)
+| Left | Horizontal | If | List
 | Left | Vertical | If | Cell
 | Right | Horizontal | While | List
 | Right | Vertical | While | Cell
 
-(any) vs (all) are equivalent if testing only a single cell
+### Question for List vs Cell
+
+If testing a cell, a zero or negative value will be considered `failed` and initiate a rollback. Any positive value succeeds.
+
+Testing a list is more complex. Lists can contain zeroes that are not anticipated or explicitly added by the programmer. Zeroes are placeholders, often used in the place of `null`, which does not exist in Rivulet. A list is implied to contain an infinite number of zeroes following its last value; they are simply not followed if they were not expliticly added and don't have explicit values after them.
+
+A test on a list will return `failed` and rollback if it is entirely empty or only populated by zeroes. If a list has any negative values, it will also trigger a rollback. In any other condition, it returns `succeeded`.

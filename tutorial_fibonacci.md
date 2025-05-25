@@ -399,7 +399,7 @@ The second question marker need only end vertically, to mark the test as the tes
 
 ## Final Steps and Testing
 
-We still have one more result to print, waiting in list2. We push this to list 1 in the last glyph. This is due to the rolling back of our last iteration.
+We still have two more results to print, waiting in list2. We push these to list 1 in the last glyph. This is due to the rolling back of our last iteration.
 
 Once all the glyphs are written, we can re-assess them and move strands around between glyphs to simplify or combine them. The objective is to find harmony in the program: to edit glyphs that don't complement the stylistic consensus emerging in the edit. Through this process, we can continually re-evaluate with `-p`, ensuring each glyph is still set to perform the correct tasks.
 
@@ -407,5 +407,5 @@ Final debugging can be done with the `-v` indicator (for verbose). In this debug
 
 Once we are happy with our program, we can generate an svg of it with the arguments `--svg` and optionally `--theme` to set the theme to `monokai`, `pacman`, or another definied in the `riv_themes.py` file. Here is a complete Fibonacci program in pacman:
 
-<img src="images/fib1_pacman.svg"> 
+<img src="images/fib1_pacman.svg" width="400"> 
 

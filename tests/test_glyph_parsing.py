@@ -332,15 +332,16 @@ action_strand_with_negative_action = """
  2    ╴─╮╶╯╶╮ ╷
  3  ╵╰──┘   │
  5  ╰───────╯ │
- 7   ╭╴│    ╭╴│
+ 7   ╭╴     ╭╴│
 11   │ │    ╰─╯
-13   ╰─╯      ╷
+13   │ │    
+17   ╰─╯        ╷
 """
 def test_action_strand_with_negative_action():
     parser = Parser()
     block = parser.parse_program(str(action_strand_with_negative_action))[0]
 
-    assert block["tokens"][0]["action"]["command"] == "mod_assignment"
+    assert block["tokens"][0]["action"]["command"] == "division_assignment"
     assert block["tokens"][2]["action"]["command"] == "root_assignment"
 
 action_strand_to_higher_number_ref_cell = """
@@ -444,4 +445,4 @@ def test_question_strand_while_1():
     print(block)
     assert block["tokens"][0]["applies_to"] == "list"
     assert block["tokens"][0]["block_type"] == "while"
-    assert block["tokens"][0]["ref_list"] == 3
+    assert block["tokens"][0]["ref_list"] == 1

@@ -39,7 +39,7 @@ Fibonacci 1 | Fibonacci 2 | Fibonacci 4
 
 ## Documentation
 Alongside this introduction, you should find:
-- [Tutorial](tutorial.md): The easiest way to get started
+- [Tutorial](tutorial_fibonacci.md): The easiest way to get started
 - [Syntax Reference](syntax.md)
 
 ## Table of Contents
@@ -49,7 +49,7 @@ Alongside this introduction, you should find:
 
 | :warning: WARNING          |
 |:---------------------------|
-| **Status: Version 0.4**. This is a mostly-working interpreter, and a tool to generate svg files of source code. The command list will likely need to expand for usability. |
+| **Status: Version 0.6** This is a mostly-working interpreter, and a tool to generate svg files of source code. The command list will likely need to expand for usability. **If you don't see a test for it, it might not be stable. This includes many of the list and list2list actions and some pseudo-code generation for questions or actions** |
 
 ## Design Philosophy
 

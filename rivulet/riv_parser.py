@@ -386,8 +386,7 @@ class Parser:
             for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
                 # make sure immediate right does not also have start symbol
                 # it does not have a continuation up or down
-                if (x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph")) \
-                \
+                if (x == len(ln) - 1 or not ln[x+1] in self.get_symbol_by_name("start_glyph")) \
                 and not self.__has_continuation(x, y, program, "up") \
                 and not self.__has_continuation(x, y, program, "down"):
                     level = 1
@@ -510,7 +509,7 @@ class Parser:
                     first_qm["end_pos"] = last_marker_type["name"]
                     if first_qm["end_pos"] == "horizontal":
                         first_qm["applies_to"] = "list"
-                        first_qm["ref_list"] = 3 # FIXME: wtf????
+                        first_qm["ref_list"] = first_qm["ref_cell"][0]
                         del first_qm["ref_cell"]
                     else:
                         first_qm["applies_to"] = "cell"

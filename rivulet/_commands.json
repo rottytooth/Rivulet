@@ -31,13 +31,27 @@
             "note": "pop from ref_list and append to act_list"
         }
     },
-    "-3":
-        {"name": "mod_assignment",
-        "note": "modulus against supplied argument"},
+    "-3":{
+        "list": {
+            "name": "addition_assignment",
+            "note": "add to location, set to zero by default"}
+        },
     "4":
         {"name": "exponent_assignment",
         "note": "raise to power of supplied argument"},
     "-4": 
         {"name": "root_assignment",
-        "note": "take root at power of supplied argument"}
+        "note": "take root at power of supplied argument"},
+    "5": 
+        {"name": "mod_assignment",
+        "note": "modulus against supplied argument"},
+    "-5": 
+        {"name": "reverse_mod_assignment",
+        "note": "modulus against supplied argument"},
+    "6":
+        {"name": "reverse_subtraction_assignment",
+        "note": "subtract from supplied argument"},
+    "-6":
+        {"name": "reverse_division_assignment",
+        "note": "divide from supplied argument"}
 }

@@ -1,8 +1,10 @@
 "Interpreter for the Rivulet programming language"
-from argparse import ArgumentParser
-from enum import Enum
+import copy
 import json
 import math
+from argparse import ArgumentParser
+from enum import Enum
+
 from rivulet.riv_exceptions import RivuletSyntaxError
 from rivulet.riv_parser import Parser
 from rivulet.riv_python_transpiler import PythonTranspiler
@@ -78,11 +80,11 @@ class Interpreter:
         for idx, g in enumerate(glyphs):
             g["id"] = idx
 
-        parse_tree = self.treeify_glyphs(json.loads(json.dumps(glyphs)), 1, [])
+        parse_tree = self.__treeify_glyphs(copy.deepcopy(glyphs), 1, [])
 
         self.__decorate_blocks(parse_tree, 0, None)
 
-        self.__interpret_block(parse_tree, state, debug)
+        state = self.__interpret_block(parse_tree, state, debug)
 
         if 1 in state:
             if self.output == Interpreter.OutputOption.unicode:
@@ -90,23 +92,23 @@ class Interpreter:
             elif self.output == Interpreter.OutputOption.numeric:
                 print(" ".join(str(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
 
-        # if debug:
-        #     debug(parse_tree, state)
+        if debug:
+            debug(state)
 
-    def treeify_glyphs(self, glyphs, curr_level, tree):
+    def __treeify_glyphs(self, glyphs, curr_level, tree):
         "Reorganize a flat list of glyphs into a tree by level"
         if glyphs[0]["level"] == curr_level:
             tree.append(glyphs.pop(0))
         elif glyphs[0]["level"] > curr_level:
             level = []
             tree.append(level)
-            self.treeify_glyphs(glyphs, curr_level + 1, level)
+            self.__treeify_glyphs(glyphs, curr_level + 1, level)
         else:
             # go back up one level
             return tree
 
         if len(glyphs) > 0:
-            self.treeify_glyphs(glyphs, curr_level, tree)
+            self.__treeify_glyphs(glyphs, curr_level, tree)
 
         return tree
 
@@ -143,20 +145,21 @@ class Interpreter:
 
     def __interpret_block(self, parse_tree, state, debug = False):
 
-        rollback_state = json.loads(json.dumps(state))
+        rollback_state = copy.deepcopy(state)
 
         for g in parse_tree:
             if isinstance(g, list):
-                self.__interpret_block(g, state)
+                state = self.__interpret_block(g, state, debug)
             else:
                 action = self.__interpret_glyph(g, state, debug)
                 if action == self.Action.rollback:
-                    state = json.loads(json.dumps(rollback_state))
-                    return # a rollback also exits the block
+                    state = copy.deepcopy(rollback_state)
+                    return state # a rollback also exits the block
                 if action == self.Action.cont:
                     continue
                 if action == self.Action.repeat:
-                    self.__interpret_block(parse_tree, state)
+                    state = self.__interpret_block(parse_tree, state, debug)
+        return state
 
 
     def __interpret_glyph(self, glyph, state, debug = False) -> Action:
@@ -186,11 +189,20 @@ class Interpreter:
 
                 # find source item
                 if list2list:
-                    source = state[token["ref_cell"]]
+                    # the token will have ref_cell but it's actually just the list,
+                    # the first value, that indicates this
+                    source = state[token["ref_cell"][0]]
                 if token["subtype"] == "value":
                     source = token["value"]
-                elif token["subtype"] == "ref":
-                    if token["ref_cell"][0] >= len(token):
+                elif token["subtype"] == "ref" and \
+                    (not "action" in token or not token["action"] or \
+                    not "subtype" in token["action"] or \
+                    not token["action"]["subtype"] or \
+                    token["action"]["subtype"] != "list2list"):
+                    # rule out list2list, which has a special case for source
+                    # FIXME: simpler way to test for all this?
+
+                    if not token["ref_cell"][0] in state:
                         raise RivuletSyntaxError("List reference out of bounds")
 
                     if token["ref_cell"][1] >= len(state[token["ref_cell"][0]]):
@@ -201,8 +213,19 @@ class Interpreter:
 
                 # find item to apply to
                 if list2list:
-                    for i in range(len(state[token["list"]])):
-                        state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
+                    # special case for pop/append
+                    # FIXME: there may be other cases where list2list requires the last item
+                    if token["action"]["command"] == "pop_and_append":
+                        if len(state[token["ref_cell"][0]]) == 0:
+                            state[token["list"]].append(0)
+                        else:
+                            state[token["list"]].append(state[token["ref_cell"][0]].pop(-1))
+                    else:
+                        for a in range(len(state[token["list"]]), len(source)):
+                            # append zeroes to create space for the new values
+                            state[token["list"]].append(0)
+                        for i in range(len(state[token["list"]])):
+                            state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
                 elif token["action"] is None or "command" not in token["action"]:
                     # defaults to add_assign
                     state[token["list"]][token["assign_to_cell"]] += source
@@ -223,7 +246,7 @@ class Interpreter:
                     state[token["list"]][token["assign_to_cell"]] = self.__resolve_cmd(token, state[token["list"]][token["assign_to_cell"]], source)
 
         if debug:
-            debug(json.loads(json.dumps(state)))
+            debug(copy.deepcopy(state))
         if self.verbose:
             print(self.debug.glyph_drawn(glyph["glyph"]))
             print(self.debug.glyph_pseudo(glyph))
@@ -267,14 +290,20 @@ class Interpreter:
                 return initial_value + assign_value
             case "subtraction_assignment":
                 return initial_value - assign_value
+            case "reverse_subtraction_assignment":
+                return assign_value - initial_value
             case "overwrite":
                 return assign_value
             case "multiplication_assignment":
                 return initial_value * assign_value
             case "division_assignment":
                 return initial_value / assign_value
+            case "reverse_division_assignment":
+                return assign_value / initial_value
             case "mod_assignment":
                 return initial_value % assign_value
+            case "reverse_mod_assignment":
+                return assign_value % initial_value
             case "exponent_assignment":
                 return initial_value ** assign_value
             case "root_assignment":
@@ -287,9 +316,17 @@ class Interpreter:
         succeeds = False
 
         if token["applies_to"] == "cell":
-            succeeds = state[token["ref_cell"][0]][token["ref_cell"][1]] > 0
+            if len(state[token["ref_cell"][0]]) <= token["ref_cell"][1]:
+                succeeds = False
+            else:
+                succeeds = state[token["ref_cell"][0]][token["ref_cell"][1]] > 0
         elif token["applies_to"] == "list":
-            succeeds = all(i > 0 for i in state[token["ref_list"]])
+            if len(state[token["ref_list"]]) == 0:
+                succeeds = False
+            elif all(i == 0 for i in state[token["ref_list"]]):
+                succeeds = False
+            else:
+                succeeds = not any(i < 0 for i in state[token["ref_list"]])
         else:
             raise RivuletSyntaxError("Could not determine what question marker applies to")
 
@@ -303,6 +340,7 @@ class Interpreter:
 
 
 def main():
+    """Main entry point for interpreter"""
 
     arg_parser = ArgumentParser(description=f'Rivulet Interpreter {VERSION}',
                             epilog='More at https://danieltemkin.com/Esolangs/Rivulet')
@@ -321,10 +359,10 @@ def main():
 
     intr = Interpreter()
 
-    if (args.print):
+    if args.print:
         intr.print_and_exit(args.progfile)
         exit(0)
-    if (args.svg):
+    if args.svg:
         intr.draw_svg(args.progfile, args.color_set)
         exit(0)
 
