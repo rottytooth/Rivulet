@@ -451,3 +451,57 @@ def test_if_list2_pos_and_neg_rollback():
 
     # reverted to previous state
     assert st[1] == [0]
+
+list2list_source_longer_than_target = """
+ ╵ ╮─╮╮    ╵
+   ╰─╯╰─ ╷  ╰─╮ ╮  ╮  ─╮
+              ╰─╰──╰───╯ ╷
+    
+ ╵ ╰─╮
+   ╴─╯
+   ╭
+   │ ╵
+   │ │
+   ╰─╯ ╷
+"""
+def test_list2list_source_longer_than_target():
+    "List2List: Source list longer than target list"
+    int = Interpreter()
+    st = []
+
+    def callback(state):
+        nonlocal st
+        st = state
+
+    int.interpret_program(str(list2list_source_longer_than_target), False, callback)
+
+    # first iteration, data is loaded
+    assert st[1] == [5, 6, 7]
+    assert st[2] == [5, 6, 7]
+
+list2list_source_shorter_than_target = """
+ ╵ ╮─╮╮╰─╮ ╮    ╵
+   ╰─╯╰─ ╰─╰──╷  ╰─╮ ╮  ╮  ─╮
+                   ╰─╰──╰───╯ ╷
+    
+ ╵ ╰─╮
+   ╴─╯
+   ╭
+   │ ╵
+   │ │
+   ╰─╯ ╷
+"""
+def test_list2list_source_shorter_than_target():
+    "List2List: Source list shorter than target list, should not crash"
+    int = Interpreter()
+    st = []
+
+    def callback(state):
+        nonlocal st
+        st = state
+
+    int.interpret_program(str(list2list_source_shorter_than_target), False, callback)
+
+    # first iteration, data is loaded
+    assert st[1] == [5, 6, 7, 4]
+    assert st[2] == [5, 6, 7]

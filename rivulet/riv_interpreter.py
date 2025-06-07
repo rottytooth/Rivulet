@@ -224,7 +224,7 @@ class Interpreter:
                         for a in range(len(state[token["list"]]), len(source)):
                             # append zeroes to create space for the new values
                             state[token["list"]].append(0)
-                        for i in range(len(state[token["list"]])):
+                        for i in range(len(source)):
                             state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
                 elif token["action"] is None or "command" not in token["action"]:
                     # defaults to add_assign
