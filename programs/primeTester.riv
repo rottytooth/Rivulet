@@ -1,9 +1,9 @@
-Example is for 11
+Run with input parameter for number to test, such as -i [11]
 
  1 ╵ ┌──
- 2   │ ┌─ ╰─╮  
- 3  ╶╯ │    └───
- 5    ╶╯         ╷
+ 2   │┌─  
+ 3  ╶╯│  
+ 5   ╶╯ ╷
 
  1 ╵╵ ┌─
  2    │   ┌─╶

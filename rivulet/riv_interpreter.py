@@ -1,4 +1,5 @@
 "Interpreter for the Rivulet programming language"
+import ast
 import copy
 import json
 import math
@@ -36,7 +37,7 @@ class Interpreter:
         self.output = Interpreter.OutputOption.none
 
 
-    def interpret_file(self, progfile, verbose, output):
+    def interpret_file(self, progfile, verbose, input, output):
         "Interpret a Rivulet program file"
         self.verbose = verbose
         self.output = output
@@ -44,10 +45,10 @@ class Interpreter:
         with open(progfile, "r", encoding="utf-8") as file:
             program = file.read()
 
-        return self.interpret_program(program, verbose)
+        return self.interpret_program(program, verbose, input)
     
 
-    def interpret_program(self, program:str, verbose:bool, debug = None):
+    def interpret_program(self, program:str, verbose:bool, start_state = None, debug = None):
         """Interpret a Rivulet program passed by text
         
         program: program text as string
@@ -60,10 +61,10 @@ class Interpreter:
 
         glyphs = parser.parse_program(program)
 
-        self.__interpret(glyphs, debug)
+        self.__interpret(glyphs, start_state, debug)
 
 
-    def __interpret(self, glyphs, debug = None):
+    def __interpret(self, glyphs, start_state = None, debug = None):
         state = dict([(1,[])])
 
         prime_size = max(glyphs, key=lambda x: x["list_size"])["list_size"]
@@ -74,6 +75,12 @@ class Interpreter:
                 state[num] = []
                 if len(state) >= prime_size:
                     break
+
+        # add input if there is any
+        if start_state:
+            # if input is provided, initialize list 2 with it
+            state[2] = start_state
+
         if self.verbose:
             self.debug = PythonTranspiler()
 
@@ -303,6 +310,8 @@ class Interpreter:
             case "mod_assignment":
                 return initial_value % assign_value
             case "reverse_mod_assignment":
+                if initial_value == 0:
+                    return 0
                 return assign_value % initial_value
             case "exponent_assignment":
                 return initial_value ** assign_value
@@ -347,17 +356,27 @@ def main():
 
     arg_parser.add_argument('progfile', metavar='progfile', type=str,
                         help='Rivulet program file')
+    
+    arg_parser.add_argument('-i', dest='input', type=str, default=None,
+                        help='input parameter, to load in list 2')
+
     arg_parser.add_argument('-p', dest='print', action="store_true", default=False,
                         help='parse and print interpretation of each glyph, then exit')
+
     arg_parser.add_argument('-v', dest='verbose', action='store_true',
                         default=False, help='verbose logging')
+
+    arg_parser.add_argument('-o', dest='output', type=Interpreter.OutputOption, default=Interpreter.OutputOption.none, choices=list(Interpreter.OutputOption))
+
     arg_parser.add_argument('--svg', dest='svg', action='store_true', default=False,
                         help='generate svg of program, then exit')
-    arg_parser.add_argument('-o', dest='output', type=Interpreter.OutputOption, default=Interpreter.OutputOption.none, choices=list(Interpreter.OutputOption))
     arg_parser.add_argument('--theme', dest='color_set', default="default", help="color scheme for svg")
     args = arg_parser.parse_args()
 
     intr = Interpreter()
+
+    if args.input:
+        args.input = ast.literal_eval(args.input)
 
     if args.print:
         intr.print_and_exit(args.progfile)
@@ -366,7 +385,7 @@ def main():
         intr.draw_svg(args.progfile, args.color_set)
         exit(0)
 
-    intr.interpret_file(args.progfile, args.verbose, args.output)
+    intr.interpret_file(args.progfile, args.verbose, args.input, args.output)
 
 if __name__ == "__main__":
     main()
