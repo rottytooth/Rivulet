@@ -63,7 +63,7 @@ def test_correct_ref_cells_second_strand_left():
         nonlocal st
         st = state
 
-    int.interpret_program(str(two_strand_with_ref_left), False, callback)
+    int.interpret_program(str(two_strand_with_ref_left), False, None, callback)
 
     # val cell is not yet populated when copied to ref cell
     assert len(st) > 1
@@ -85,7 +85,7 @@ def test_correct_ref_cells_second_strand_right():
         nonlocal st
         st = state
 
-    int.interpret_program(str(two_strand_with_ref_right), False, callback)
+    int.interpret_program(str(two_strand_with_ref_right), False, None, callback)
 
     # val cell is already populated when copied to ref cell
     assert len(st) > 1
@@ -107,7 +107,7 @@ def test_single_ref_strand_no_vals():
         nonlocal st
         st = state
 
-    int.interpret_program(str(one_ref_strand_alone), False, callback)
+    int.interpret_program(str(one_ref_strand_alone), False, None, callback)
 
     # val cell is never populated
     assert len(st) > 0
@@ -133,7 +133,7 @@ def test_copy_before_and_after():
         nonlocal st
         st = state
 
-    int.interpret_program(str(mult_copies), False, callback)
+    int.interpret_program(str(mult_copies), False, None, callback)
 
     # first cell should be zero, the others 7
     assert len(st) > 1
@@ -163,7 +163,7 @@ def test_pop_append_basic():
         iteration += 1
         st.append(state)
 
-    int.interpret_program(str(pop_append_basic), False, callback)
+    int.interpret_program(str(pop_append_basic), False, None, callback)
 
     # first iteration, data is loaded
     assert st[0][1] == [2, -9, 14]
@@ -206,7 +206,7 @@ def test_fibonacci():
         nonlocal st
         st = state
 
-    int.interpret_program(str(fibonacci1), False, callback)
+    int.interpret_program(str(fibonacci1), False, None, callback)
 
     # val cell is never populated
     assert len(st) > 0
@@ -232,7 +232,7 @@ def test_list2list_basic():
         nonlocal st
         st = state
 
-    int.interpret_program(str(list2list_basic), False, callback)
+    int.interpret_program(str(list2list_basic), False, None,callback)
 
     # first iteration, data is loaded
     assert st[1] == [16, 16, 16, 16, 16, 16]
@@ -256,7 +256,7 @@ def test_cell_to_list1():
         nonlocal st
         st = state
 
-    int.interpret_program(str(cell_to_list1), False, callback)
+    int.interpret_program(str(cell_to_list1), False, None, callback)
 
     assert st[1] == [-96, -96, -96, -96, -96]
 
@@ -279,7 +279,7 @@ def test_if_cell1_neg():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_cell1_neg), False, callback)
+    int.interpret_program(str(if_cell1_neg), False, None, callback)
 
     # reverted to previous state
     assert st[1] == [0]
@@ -303,7 +303,7 @@ def test_if_cell1_pos():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_cell1_pos), False, callback)
+    int.interpret_program(str(if_cell1_pos), False, None, callback)
 
     # continues to hold positive value
     assert st[1] == [1]
@@ -327,7 +327,7 @@ def test_if_list1_neg():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_list1_neg), False, callback)
+    int.interpret_program(str(if_list1_neg), False, None, callback)
 
     # reverted to previous state
     assert st[1] == [0]
@@ -351,7 +351,7 @@ def test_if_list1_pos():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_list1_pos), False, callback)
+    int.interpret_program(str(if_list1_pos), False, None, callback)
 
     # maintains positive value
     assert st[1] == [1]
@@ -375,7 +375,7 @@ def test_if_list2_zeroes_neg():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_list2_zeroes_neg), False, callback)
+    int.interpret_program(str(if_list2_zeroes_neg), False, None, callback)
 
     # reverted to previous state
     assert st[1] == [0]
@@ -399,7 +399,7 @@ def test_if_list2_zero_and_negative_neg():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_list2_zero_and_negative_neg), False, callback)
+    int.interpret_program(str(if_list2_zero_and_negative_neg), False, None, callback)
 
     # reverted to previous state
     assert st[1] == [0]
@@ -423,7 +423,7 @@ def test_if_list2_zero_and_pos():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_list2_zero_and_positive), False, callback)
+    int.interpret_program(str(if_list2_zero_and_positive), False, None, callback)
 
     # reverted to previous state
     assert st[1] == [1]
@@ -447,7 +447,7 @@ def test_if_list2_pos_and_neg_rollback():
         nonlocal st
         st = state
 
-    int.interpret_program(str(if_list2_pos_and_neg_rollback), False, callback)
+    int.interpret_program(str(if_list2_pos_and_neg_rollback), False, None, callback)
 
     # reverted to previous state
     assert st[1] == [0]
@@ -473,7 +473,7 @@ def test_list2list_source_longer_than_target():
         nonlocal st
         st = state
 
-    int.interpret_program(str(list2list_source_longer_than_target), False, callback)
+    int.interpret_program(str(list2list_source_longer_than_target), False, None, callback)
 
     # first iteration, data is loaded
     assert st[1] == [5, 6, 7]
@@ -500,7 +500,7 @@ def test_list2list_source_shorter_than_target():
         nonlocal st
         st = state
 
-    int.interpret_program(str(list2list_source_shorter_than_target), False, callback)
+    int.interpret_program(str(list2list_source_shorter_than_target), False, None, callback)
 
     # first iteration, data is loaded
     assert st[1] == [5, 6, 7, 4]
