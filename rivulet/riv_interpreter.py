@@ -268,7 +268,7 @@ class Interpreter:
         glyphs = parser.parse_program(program)
 
         self.debug = PythonTranspiler()        
-        print(self.debug.print_program(glyphs, False))
+        print(self.debug.print_program(glyphs))
 
 
     def draw_svg(self, progfile, theme):
