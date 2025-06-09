@@ -257,7 +257,7 @@ class Interpreter:
         if self.verbose:
             print(self.debug.glyph_drawn(glyph["glyph"]))
             print(self.debug.glyph_pseudo(glyph))
-            print(state)
+            self.__print_state(state)
             print("\n")
         elif self.output == Interpreter.OutputOption.none:
             print(" ")
@@ -266,6 +266,18 @@ class Interpreter:
 
         return retval
     
+    def __print_state(self, state):
+        last_non_empty = None
+        for k in sorted(state.keys(), reverse=True):
+            if state[k]:
+                last_non_empty = (k, state[k])
+                break
+        if not last_non_empty or len(last_non_empty) == 0:
+            print(state)
+            return
+        
+        truncated_state = {k: v for k, v in state.items() if k <= last_non_empty[0]}
+        print(truncated_state)
 
     def print_and_exit(self, progfile):
         "Print source and pseudo-code for complete program"
