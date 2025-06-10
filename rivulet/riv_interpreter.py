@@ -102,6 +102,7 @@ class Interpreter:
         if debug:
             debug(state)
 
+
     def __treeify_glyphs(self, glyphs, curr_level, tree):
         "Reorganize a flat list of glyphs into a tree by level"
         if glyphs[0]["level"] == curr_level:
@@ -265,7 +266,8 @@ class Interpreter:
             print("\n".join([f"{k}: {v}" for k, v in state.items() if v]))
 
         return retval
-    
+
+
     def __print_state(self, state):
         last_non_empty = None
         for k in sorted(state.keys(), reverse=True):
@@ -275,9 +277,10 @@ class Interpreter:
         if not last_non_empty or len(last_non_empty) == 0:
             print(state)
             return
-        
+
         truncated_state = {k: v for k, v in state.items() if k <= last_non_empty[0]}
         print(truncated_state)
+
 
     def print_and_exit(self, progfile):
         "Print source and pseudo-code for complete program"
@@ -359,6 +362,8 @@ class Interpreter:
 
         return retval
 
+def list_of_ints(arg):
+    return list(map(int, arg.split(',')))
 
 def main():
     """Main entry point for interpreter"""
@@ -369,7 +374,7 @@ def main():
     arg_parser.add_argument('progfile', metavar='progfile', type=str,
                         help='Rivulet program file')
     
-    arg_parser.add_argument('-i', dest='input', type=str, default=None,
+    arg_parser.add_argument('-i', dest='input', type=list_of_ints, default=None,
                         help='input parameter, to load in list 2')
 
     arg_parser.add_argument('-p', dest='print', action="store_true", default=False,
@@ -386,9 +391,6 @@ def main():
     args = arg_parser.parse_args()
 
     intr = Interpreter()
-
-    if args.input:
-        args.input = ast.literal_eval(args.input)
 
     if args.print:
         intr.print_and_exit(args.progfile)
