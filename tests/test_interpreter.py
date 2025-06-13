@@ -4,7 +4,9 @@ Test glyph full parsing
 """
 import copy
 import pytest
+import re
 from rivulet.riv_interpreter import Interpreter
+from rivulet.riv_exceptions import RivuletSyntaxError
 
 def test_treeify_1_3_3():
     set_one = [
@@ -505,3 +507,80 @@ def test_list2list_source_shorter_than_target():
     # first iteration, data is loaded
     assert st[1] == [5, 6, 7, 4]
     assert st[2] == [5, 6, 7]
+
+hello_world = """
+ 1 ╵  ╶╮╰─╮╶╮╭╯╰─╮╭╯╭╯╰─╮╰─╮╭─╯   ╶╮╭╯ 
+ 2     │  │ ││   ││ ╰─╮ ╰─╮││      ││
+ 3  ╭──╯  │ ││   ││   │   ││╰────╮ ││
+ 5  │╭────╯ │╰──╮│╰──╮╰──╮│╰──╮  │ ││
+ 7  ││      ╰──╮││   │   ││╭──╯  │ ││
+11  │╰──────── │││   ╰── │││ ╭───╯ │╰───
+13  ╰────── ╭──╯│╰────── │││ ╰────╮│ 
+17   ╭──────╯   ╰─────╮╭─╯│╰───── │╰────
+19   ╰──────────     ─╯│  ╰────   │  
+23                     ╰────      ╰──   ╷
+"""
+def test_text_output_hello_world(capsys):
+    "Output fractfloating point: 2 1.5 1"
+    int = Interpreter()
+
+    int.output = Interpreter.OutputOption.unicode
+    int.interpret_program(str(hello_world), False)
+    captured = capsys.readouterr()
+
+    assert captured.out.strip() == "HELLO WORLD!"
+
+output_floating_point_1 = """
+ 1 ╵ ╰─ ╰─╮ ╰─ ╵ ╰─ ╮
+ 2        ╰─  ╷     ╰─│
+                    ╭─╯╷
+"""
+def test_output_floating_point_1(capsys):
+    "Output fractfloating point: 2 1.5 1"
+    int = Interpreter()
+
+    int.output = Interpreter.OutputOption.numeric
+    int.interpret_program(str(output_floating_point_1), False)
+    captured = capsys.readouterr()
+
+    assert captured.out.strip() == "2 1.5 1"
+
+output_floating_point_2 = """
+ 1 ╵ ╰─ ╰─╮ ╰─ 
+ 2        ╰─  ╷
+
+ 1 ╵ ╰──────  
+ 2     │    ╰─│
+ 3   ╭─╯    ╭─╯╷
+"""
+def test_output_floating_point_2(capsys):
+    "Output fractfloating point: 2 1.5 1"
+    int = Interpreter()
+
+    int.output = Interpreter.OutputOption.numeric
+    int.interpret_program(str(output_floating_point_2), False)
+    captured = capsys.readouterr()
+
+    # assert captured.out.strip() == "0.16666666666666666 3 1"
+    pattern = re.compile(r"0.1(6+) 3 1$")
+    # Should match empty string and any string of only 6s
+    assert pattern.fullmatch(captured.out.strip())
+
+double_hooked = """
+ 1  ╶╮
+ 2 ╰─│
+ 3 ╭─╯╷
+"""
+def test_error_for_double_hooked():
+    "starts and ends with a hook"
+    int = Interpreter()
+    e = ""
+
+    int.output = Interpreter.OutputOption.numeric
+    try:
+        int.interpret_program(str(double_hooked), False)
+    except RivuletSyntaxError as err:
+        e = str(err)
+
+    assert "End glyph at" in e
+    assert "has no corresponding Start" in e

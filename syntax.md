@@ -138,7 +138,7 @@ The action strands each have a value of 4, which corresponds to exponentiation_a
 | --- | --- | --- |
 | default | addition_assignment | add to location, set to zero by default |
 | 0 | overwrite | assignment, overwriting existing value |
-| 1 | insert | inserts value after indicated cell |
+| 1 | insert | inserts value before indicated cell |
 | -1 | subtraction assignment | |
 | 2 | multiplication assignment | |
 | -2 | division assignment | |
@@ -219,7 +219,7 @@ Most actions are similar to the example in that it's the same action as a cell-t
 ```
 Cell reading:
     "name": "insert",
-    "note": "inserts value after indicated cell (applied immediately)"
+    "note": "inserts value before indicated cell (applied immediately)"
 
 List reading:
     "name": "append",
