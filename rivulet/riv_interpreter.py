@@ -37,7 +37,7 @@ class Interpreter:
         self.output = Interpreter.OutputOption.none
 
 
-    def interpret_file(self, progfile, verbose, input, output):
+    def interpret_file(self, progfile, verbose, inp, output):
         "Interpret a Rivulet program file"
         self.verbose = verbose
         self.output = output
@@ -45,8 +45,8 @@ class Interpreter:
         with open(progfile, "r", encoding="utf-8") as file:
             program = file.read()
 
-        return self.interpret_program(program, verbose, input)
-    
+        return self.interpret_program(program, verbose, inp)
+
 
     def interpret_program(self, program:str, verbose:bool, start_state = None, debug = None):
         """Interpret a Rivulet program passed by text
@@ -95,9 +95,12 @@ class Interpreter:
 
         if 1 in state:
             if self.output == Interpreter.OutputOption.unicode:
-                print("".join(chr(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
+                print("".join(chr(math.floor(num)) \
+                            for num in state[1] \
+                                if 0 <= num <= 0x10FFFF))
             elif self.output == Interpreter.OutputOption.numeric:
-                print(" ".join(str(num) for num in state[1] if isinstance(num, int) and 0 <= num <= 0x10FFFF))
+                print(" ".join(str(num) \
+                            for num in state[1]))
 
         if debug:
             debug(state)

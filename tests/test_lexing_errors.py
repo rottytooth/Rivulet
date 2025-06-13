@@ -70,3 +70,15 @@ def test_orphan_question_strand():
     assert "without a second" in str(err.value)
     assert "glyph 0" in str(err.value)
     assert "4, 0" in str(err.value)
+
+double_hooked = """
+ 1  ╶╮
+ 2   │
+ 3 ╭─╯╷
+"""
+def test_error_for_double_hooked():
+    "starts and ends with a hook"
+    lexr = Parser()
+    gl = copy.deepcopy(orphan_question_strand)
+    with pytest.raises(RivuletSyntaxError) as err:
+        lexr.parse_program(gl)

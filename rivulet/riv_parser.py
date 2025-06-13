@@ -179,6 +179,8 @@ class Parser:
         next_dir = False
 
         # symbol is the metadata, pulled from the lexicon, for curr's character
+        if curr == None:
+            raise RivuletSyntaxError(f"Unexpected end of strand at {prev['x']}, {prev['y']} heading direction {prev['dir']}")
         symbol = [l for l in self.lexicon if curr['symbol'] in l['symbol']]
 
         if not symbol or len(symbol) == 0:
