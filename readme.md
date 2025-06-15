@@ -47,6 +47,7 @@ Fibonacci 1 | Fibonacci 2 | Fibonacci 4
 - [A Rivulet Editor](https://observablehq.com/@jwolondon/rivulet-editor): Unlike standard text editors, this makes it easy to move strands as units
 
 ## Table of Contents
+- [Get Started](#get-started)
 - [Design Philosophy](#design-philosophy)
 - [Data Model](#data-model)
 - [Control Flow](#control-flow)
@@ -54,6 +55,25 @@ Fibonacci 1 | Fibonacci 2 | Fibonacci 4
 | :warning: WARNING          |
 |:---------------------------|
 | **Status: Version 0.6** This is a mostly-working interpreter, and a tool to generate svg files of source code. The command list will likely need to expand for usability. **If you don't see a test for it, it might not be stable. This includes many of the list and list2list actions and some pseudo-code generation for questions or actions** |
+
+## Get Started
+
+Install Rivulet like so:
+```
+git clone https://github.com/rottytooth/Rivulet
+cd Rivulet
+python -m pip install -r requirements.txt
+python -m pip install -e .
+```
+
+The Hello World can be run with: `riv -o unicode programs/hello.riv`
+
+To produce psuedo-code for a program: `riv -p program.riv`
+
+To run with verbose output (includes the pseudo-code): `riv -v program.riv`
+
+To include output as unicode: `riv -o unicode program.riv`
+To include output as numeric values: `riv -o numeric program.riv`
 
 ## Design Philosophy
 
@@ -74,4 +94,3 @@ The first list, List 1, is sometimes used as the output stream. This is an inter
 Every strand of every glyph runs in a Rivulet program; there is no equivalent of an "if" statement. If a glyph leads to an unwanted state, that glyph and the others of its block (all contiguous glyphs of the same level or higher), can be rolled back, setting the execution state to what it had been previously. The conditional rollback is the only form of branching in Rivulet. Loops only end with a rollback of their last iteration. Tests for rollback are that a single cell or an entire list is zero, indicated by a special set of strands called Question Strands.
 
 Data strands are run in the order they begin at the top left, moving through each column flowing to the right. So the strand beginning at coordinate [2,0] is run, then [2,1], then [3,0], and so on. Question strands are always run after all data strands from the same glyph are executed.
-
