@@ -38,9 +38,13 @@ Fibonacci 1 | Fibonacci 2 | Fibonacci 4
 <img src="images/fibonacci1.png">  | <img src="images/fibonacci2.png"> | <img src="images/fibonacci4.png">
 
 ## Documentation
-Alongside this introduction, you should find:
-- [Tutorial](tutorial_fibonacci.md): The easiest way to get started
+- Tutorials (The easiest way to get started)
+   - [Tutorial: A Fibonacci program](tutorial_fibonacci.md): The original tutorial
+   - [Intro to Rivulet](https://observablehq.com/@jwolondon/rivulet-intro) (outside link)
 - [Syntax Reference](syntax.md)
+
+## Tools
+- [A Rivulet Editor](https://observablehq.com/@jwolondon/rivulet-editor): Unlike standard text editors, this makes it easy to move strands as units
 
 ## Table of Contents
 - [Design Philosophy](#design-philosophy)
