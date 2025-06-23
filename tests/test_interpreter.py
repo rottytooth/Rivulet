@@ -566,6 +566,22 @@ def test_output_floating_point_2(capsys):
     # Should match empty string and any string of only 6s
     assert pattern.fullmatch(captured.out.strip())
 
+output_floating_point_3 = """
+ 1 ╵ ╰─ ╰─╮ ╰─ ╵ ╰─ ╮    ╵ ╮
+ 2        ╰─  ╷     ╰─│    ╰─│
+ 3                  ╭─╯╷   ╭─╯╷
+"""
+def test_output_floating_point_3(capsys):
+    "Output should be whole number, even if arrived at by division"
+    int = Interpreter()
+
+    int.output = Interpreter.OutputOption.numeric
+    int.interpret_program(str(output_floating_point_3), False)
+    captured = capsys.readouterr()
+
+    assert captured.out.strip() == "1 1.5 1"
+
+
 double_hooked = """
  1  ╶╮
  2 ╰─│
@@ -584,3 +600,27 @@ def test_error_for_double_hooked():
 
     assert "End glyph at" in e
     assert "has no corresponding Start" in e
+
+list2list_append_action = """
+ 1 ╵╰─ ╰── ╰───
+ 2  ╰────      ╷
+
+ 1 ╵  ╭─╶
+ 2  ╰─┘   
+ 3  ╭╴
+ 5  │
+ 7  ╷    ╷
+"""
+def test_list2list_append_action(capsys):
+    "append (action1) should append the last item from reflist"
+    int = Interpreter()
+    st = []
+
+    def callback(state):
+        nonlocal st
+        st = state
+
+    int.interpret_program(str(list2list_append_action), False, None, callback)
+
+    # last item of list1 should be appended to list2
+    assert st[2] == [8, 3]
