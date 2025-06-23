@@ -231,6 +231,8 @@ class Interpreter:
                             state[token["list"]].append(0)
                         else:
                             state[token["list"]].append(state[token["ref_cell"][0]].pop(-1))
+                    elif token["action"]["command"] == "append":
+                        state[token["list"]].extend(source)
                     else:
                         for a in range(len(state[token["list"]]), len(source)):
                             # append zeroes to create space for the new values
