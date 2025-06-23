@@ -93,17 +93,26 @@ class Interpreter:
 
         state = self.__interpret_block(parse_tree, state, debug)
 
+        def convert_num(n):
+            # convert to int, used for numeric output
+            if isinstance(n, float) and n.is_integer():
+                return int(n)
+            return n
+
         if 1 in state:
             if self.output == Interpreter.OutputOption.unicode:
                 print("".join(chr(math.floor(num)) \
                             for num in state[1] \
                                 if 0 <= num <= 0x10FFFF))
             elif self.output == Interpreter.OutputOption.numeric:
+                converted = [convert_num(num) for num in state[1]]
                 print(" ".join(str(num) \
-                            for num in state[1]))
+                            for num in converted))
 
         if debug:
             debug(state)
+
+
 
 
     def __treeify_glyphs(self, glyphs, curr_level, tree):
@@ -232,7 +241,7 @@ class Interpreter:
                         else:
                             state[token["list"]].append(state[token["ref_cell"][0]].pop(-1))
                     elif token["action"]["command"] == "append":
-                        state[token["list"]].extend(source)
+                        state[token["list"]].append(state[token["ref_cell"][0]][-1])
                     else:
                         for a in range(len(state[token["list"]]), len(source)):
                             # append zeroes to create space for the new values
