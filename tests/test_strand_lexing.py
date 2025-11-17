@@ -164,6 +164,39 @@ def test_correct_count_ends_with_left_facing():
     starts = lexr._Parser__find_strand_starts(gl[0]["glyph"])
     assert len(starts) == 5
 
+glyph_with_comment_thread = """
+╭─ ┌── ────╮
+│  │ ┌─╰─╮ ╰──╮  
+│ ╶╯ │   └─── │
+╰──╮╶╯ ╭──────╯        
+   ╰───╯
+"""
+glyph_with_comment_thread = [list(ln) for ln in glyph_with_comment_thread.splitlines()] # format
+glyph_with_comment_thread = glyph_with_comment_thread[1:] # remove first line
+
+def test_correct_count_with_comment_threads():
+    "Verify correct strand count including comment threads after lexing"
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(glyph_with_comment_thread)}]
+    lexr._Parser__load_primes(gl)
+    
+    # Lex the glyph - this processes complete strands
+    strands = lexr._Parser__lex_glyph(gl[0]["glyph"])
+    
+    # Should have 4 total strands: 3 data + 1 comment
+    assert len(strands) == 4
+    
+    # Verify we have 3 data strands and 1 comment strand
+    data_strands = [s for s in strands if s["type"] == "data"]
+    comment_strands = [s for s in strands if s["type"] == "comment"]
+    assert len(data_strands) == 3
+    assert len(comment_strands) == 1
+    
+    # Verify the comment strand is a horizontal line starting at the first row
+    assert comment_strands[0]["x"] == 1
+    assert comment_strands[0]["y"] == 0
+    assert comment_strands[0]["name"] == "horizontal"
+
 def test_identify_question_strands():
     "Test a glyph with a question strand set"
     lexr = Parser()

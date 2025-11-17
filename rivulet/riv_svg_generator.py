@@ -92,7 +92,9 @@ class SvgGenerator:
                 )
                 x_off += 1
             
-            for idx, token in enumerate(glyph["tokens"]):
+            # Use raw_tokens to include comments for visualization
+            tokens_to_render = glyph.get("raw_tokens", glyph["tokens"])
+            for idx, token in enumerate(tokens_to_render):
                 d = []
                 # move to upper left of starting cell
                 d.append(svg.M((token["x"] + x_off) * self.p.cell_width, (token["y"] + y_off) * self.p.cell_height))

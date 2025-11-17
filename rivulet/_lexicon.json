@@ -125,6 +125,11 @@
         "name":     "horizontal",
         "readings": [
             {
+                "pos": "start",
+                "dir": ["right","left"],
+                "type": "comment"
+            },
+            {
                 "pos": "end",
                 "dir": ["right","left"]
             },
