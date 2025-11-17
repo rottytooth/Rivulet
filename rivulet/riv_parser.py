@@ -77,10 +77,12 @@ class Parser:
         successful_matches = []
 
         # assuming only one reading of this kind
+        # exclude comment type from matching since they don't affect normal strand flow
         reading = [r for r in readings \
-                if r["pos"] == "corner" \
+                if (r["pos"] == "corner" \
                 or r["pos"] == "continue" \
-                or r["type"] == "question_marker"]
+                or r.get("type") == "question_marker") \
+                and r.get("type") != "comment"]
 
         if not reading:
             return None
@@ -127,10 +129,13 @@ class Parser:
         # the reading compatible with the direction of the strand
         reading_for_match = [r for r in readings \
             if r["pos"] == "start" \
-            and r["dir"] == [successful_matches[0]]]
+            and successful_matches[0] in r["dir"]]
 
         if len(reading_for_match) != 1:
             raise InternalError(f"{len(reading_for_match)} dirs in a start where 1 was expected")
+        
+        # Comment checking is now done in a separate pass after regular strands are identified,
+        # so we don't need special validation logic here anymore.
 
         return {
             "symbol": symbol[0]["symbol"],
@@ -147,12 +152,33 @@ class Parser:
         }
 
 
-    def __find_strand_starts(self, glyph):
+    def __find_strand_starts(self, glyph, include_comments=False, only_comments=False, exclude_positions=None):
+        """Find strand starts in the glyph.
+        
+        Args:
+            glyph: The glyph matrix
+            include_comments: If True, include comment-type starts
+            only_comments: If True, only return comment-type starts
+            exclude_positions: Set of (x, y) tuples to exclude from consideration
+        """
+        if exclude_positions is None:
+            exclude_positions = set()
+            
         starts = []
         for y in enumerate(glyph):
             for x in enumerate(glyph[y[0]]):
+                # Skip positions that are already used by other strands
+                if (x[0], y[0]) in exclude_positions:
+                    continue
+                    
                 token = self.__check_is_start(x[0], y[0], glyph)
                 if token:
+                    is_comment = token.get("type") == "comment"
+                    # Filter based on parameters
+                    if only_comments and not is_comment:
+                        continue
+                    if not include_comments and is_comment:
+                        continue
                     starts.append(token)
         return starts
 
@@ -318,9 +344,62 @@ class Parser:
         # make glyph rectangular
         glyph = [ln + [' '] * (max([len(i) for i in glyph]) - len(ln)) for ln in glyph]
 
-        starts = self.__find_strand_starts(glyph)
+        # First pass: Find and interpret all regular strands (data, action, question markers)
+        # This ignores comment-type starts
+        starts = self.__find_strand_starts(glyph, include_comments=False)
         for s in starts:
             self.__interpret_strand(glyph, s, s)
+        
+        # Build a set of positions used by regular strands
+        # This used_positions is ONLY for comment strands, and is to avoid complexities around a horiz strand meeting another horiz (a ref marker vs. a comment strand meeting a hook with a horiz half-size)
+        used_positions = set()
+        for strand in starts:
+            # Add the start position
+            used_positions.add((strand['x'], strand['y']))
+            # Add all cell positions
+            if 'cells' in strand:
+                for cell in strand['cells']:
+                    if cell and isinstance(cell, dict) and 'x' in cell and 'y' in cell:
+                        used_positions.add((cell['x'], cell['y']))
+            # Add action strand positions
+            if 'action' in strand and strand['action']:
+                action = strand['action']
+                used_positions.add((action['x'], action['y']))
+                if 'cells' in action:
+                    for cell in action['cells']:
+                        if cell and isinstance(cell, dict) and 'x' in cell and 'y' in cell:
+                            used_positions.add((cell['x'], cell['y']))
+            # Add second marker positions (for question strands)
+            if 'second' in strand and strand['second']:
+                second = strand['second']
+                used_positions.add((second['x'], second['y']))
+                if 'cells' in second:
+                    for cell in second['cells']:
+                        if cell and isinstance(cell, dict) and 'x' in cell and 'y' in cell:
+                            used_positions.add((cell['x'], cell['y']))
+
+        # Second pass: Find comment strands one at a time to avoid duplicates
+        # After each comment strand is found, add its positions to used_positions
+        # so the same thread isn't detected from the other direction
+        while True:
+            comment_starts = self.__find_strand_starts(glyph, include_comments=True, only_comments=True, 
+                                                         exclude_positions=used_positions)
+            if not comment_starts:
+                break
+            
+            # Process only the first comment start found
+            s = comment_starts[0]
+            self.__interpret_strand(glyph, s, s)
+            starts.append(s)
+            
+            # Add this comment strand's positions to used_positions to avoid detecting
+            # the same comment thread from the other direction
+            used_positions.add((s['x'], s['y']))
+            if 'cells' in s:
+                for cell in s['cells']:
+                    if cell and isinstance(cell, dict) and 'x' in cell and 'y' in cell:
+                        used_positions.add((cell['x'], cell['y']))
+
         return starts
 
 
@@ -464,13 +543,17 @@ class Parser:
             # build out new array in sort order
             sorted_tokens = []
 
+            # Keep raw tokens (including comments) for SVG generation BEFORE filtering those comment strands out
+            glyph['raw_tokens'] = glyph['tokens'].copy()
+
             # Tokens read in X, Y order and exclude tokens that run later
             # or modify other tokens
             for token in \
                 [t for t in sorted(glyph["tokens"], \
                 key=lambda x: (x['x'], x['y'])) \
                     if t["type"] != "question_marker"
-                    and t["type"] != "action"]:
+                    and t["type"] != "action"
+                    and t["type"] != "comment"]:
 
                 token["list"] = self.primes[token["y"]]
                 token["order"] = order
@@ -562,6 +645,8 @@ class Parser:
                 if token["subtype"] == "first":
                     if "second" not in token:
                         raise RivuletSyntaxError(f"Question marker without a second marker at [{token['x']}, {token['y']}] in glyph {g}")
+            
+            # Use sorted_tokens (with comments filtered out) for execution
             glyph['tokens'] = sorted_tokens
 
 

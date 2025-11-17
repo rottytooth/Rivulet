@@ -446,3 +446,44 @@ def test_question_strand_while_1():
     assert block["tokens"][0]["applies_to"] == "list"
     assert block["tokens"][0]["block_type"] == "while"
     assert block["tokens"][0]["ref_list"] == 1
+
+program_with_comment = """
+╵╭─ ┌── ────╮
+ │  │ ┌─╰─╮ ╰──╮  
+ │ ╶╯ │   └─── │
+ ╰──╮╶╯ ╭──────╯        
+    ╰───╯       ╷
+"""
+
+program_without_comment = """
+╵   ┌──      
+    │ ┌─╰─╮       
+   ╶╯ │   └───  
+     ╶╯                 
+                ╷
+"""
+
+def test_comment_threads_dont_affect_parsing():
+    """Test that comment threads are ignored during program execution parsing"""
+    parser = Parser()
+    
+    block_with_comment = parser.parse_program(program_with_comment)[0]
+    block_without_comment = parser.parse_program(program_without_comment)[0]
+    
+    # Both should have the same number of executable tokens (comments filtered out)
+    assert len(block_with_comment["tokens"]) == len(block_without_comment["tokens"])
+    
+    # Both should have 3 data strands
+    assert len(block_with_comment["tokens"]) == 3
+    assert len(block_without_comment["tokens"]) == 3
+    
+    # Verify all tokens have the same type and name
+    for i in range(len(block_with_comment["tokens"])):
+        assert block_with_comment["tokens"][i]["type"] == block_without_comment["tokens"][i]["type"]
+        assert block_with_comment["tokens"][i]["name"] == block_without_comment["tokens"][i]["name"]
+    
+    # The program with comment should have 4 raw_tokens (3 data + 1 comment)
+    assert len(block_with_comment.get("raw_tokens", block_with_comment["tokens"])) == 4
+    
+    # The program without comment should have 3 raw_tokens (same as tokens)
+    assert len(block_without_comment.get("raw_tokens", block_without_comment["tokens"])) == 3
