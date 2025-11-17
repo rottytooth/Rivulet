@@ -41,20 +41,19 @@ class SvgGenerator:
             for k, v in dictionary.items():
                 setattr(self, k, v)
 
-            if self.stroke_linecap == None:
+            if self.stroke_linecap is None:
                 self.stroke_linecap = SvgGenerator.Linecap('square')
 
 
     def __init__(self, parameters):
         self.p = parameters
- 
+        self.initial_x_off = 3 # currently assumes vertical layout
+        self.initial_y_off = 1 #self.p.cell_height
+
     def generate(self, parse_tree, outfile=False):
         "Generate an SVG file from the parse tree"
         if not outfile:
             outfile = "out/output.svg" # this should increment probly
-
-        x_off = 0 # currently assumes vertical layout
-        y_off = 1 #self.p.cell_height
 
         glyph_widths = []
 
@@ -66,15 +65,14 @@ class SvgGenerator:
 
         widest_glyph = len(max(parse_tree, key = lambda x: len(x["glyph"][0]))["glyph"][0])
 
+        y_off = self.initial_y_off
         for g, glyph in enumerate(parse_tree):
             prev_dir = None
             widths = []
-            x_off = 0
+            x_off = self.initial_x_off
 
-            glyph_width = len(glyph["glyph"][0])
-
-            if x_off + glyph_width > 30:
-                x_off = 0
+            if x_off + widest_glyph > 30:
+                x_off = self.initial_x_off
                 y_off += 1
 
             # opening glyph marker
@@ -129,7 +127,8 @@ class SvgGenerator:
 
             # closing glyph marker
             d = []
-            d.append(svg.M((glyph["end_loc"][1] + 0.5) * self.p.cell_width, (y_off + len(glyph["glyph"]) - 1) * self.p.cell_height))
+            closing_marker_x = glyph["end_loc"][1] + 1.0 + self.initial_x_off
+            d.append(svg.M(closing_marker_x * self.p.cell_width, (y_off + len(glyph["glyph"]) - 1) * self.p.cell_height))
             self._add_start_spacing(d, .5, .5)
             d.append(svg.v(self.p.cell_height/2))
             elements.append(
@@ -141,6 +140,8 @@ class SvgGenerator:
                     stroke_linecap=self.p.stroke_linecap
                 )
             )
+            # Track the closing marker position for width calculation
+            glyph_widths.append(int(closing_marker_x) + 1)
 
             y_off += (len(glyph["glyph"]) + 2)
             lines_skipped.append(y_off - 1)
@@ -153,10 +154,10 @@ class SvgGenerator:
         elif self.p.bg_pattern == SvgGenerator.BgPattern['lines']:
             for y in range(0, y_off):
                 if y not in lines_skipped:
-                    elements.append(svg.Line(x1=0, y1=self.p.cell_height * y, x2=(max(glyph_widths) + 4) * self.p.cell_width, y2=self.p.cell_height * y, stroke=self.p.line_color, stroke_opacity=self.p.line_opacity, stroke_width=self.p.line_width))
+                    elements.append(svg.Line(x1=0, y1=self.p.cell_height * y, x2=(max(glyph_widths) + 4.0) * self.p.cell_width, y2=self.p.cell_height * y, stroke=self.p.line_color, stroke_opacity=self.p.line_opacity, stroke_width=self.p.line_width))
 
         canvas = svg.SVG(
-            width=(max(glyph_widths) + 8) * self.p.cell_width,
+            width=(max(glyph_widths) + 4) * self.p.cell_width,
             height=y_off * self.p.cell_height,
             elements=elements,
             style="background-color:" + self.p.bg_color,
@@ -258,9 +259,9 @@ class SvgGenerator:
                 d.append(svg.v(self.p.cell_height / 2))
             elif dir == "left":
                 if start:
-                    self._add_start_spacing(d, 1, .5)
-                d.append(svg.h(0-self.p.cell_width / 2))
+                    self._add_start_spacing(d, .5, 1)
                 d.append(svg.v(0-self.p.cell_height / 2))
+                d.append(svg.h(0-self.p.cell_width / 2))
                 widths.append(widths[-1] - 1)
         elif cell["symbol"] == '└':
             if dir == "right":
@@ -297,7 +298,7 @@ class SvgGenerator:
                 if start:
                     self._add_start_spacing(d, 0, .5)
                 d.append(svg.h(self.p.cell_width / 2))
-                d.append(svg.v(0-self.p.cell_height / 2))                          
+                d.append(svg.v(0-self.p.cell_height / 2))
 
 
         # straight lines
@@ -335,8 +336,8 @@ class SvgGenerator:
                 d.append(svg.v(self.p.cell_height/2))
         elif cell["symbol"] == '╴' or cell["symbol"] == ['╴']:
             if dir == "left":
-                self._add_start_spacing(d, -0.5, 0)
-                d.append(svg.h(0-self.p.cell_width))
+                self._add_start_spacing(d, -0.4, 0)
+                d.append(svg.h(0-self.p.cell_width * 0.6))
                 widths.append(widths[-1] - 1)
             elif dir == "right":
                 self._add_start_spacing(d, .5, .5)
@@ -344,8 +345,8 @@ class SvgGenerator:
                 widths.append(widths[-1] + 1)
         elif cell["symbol"] == '╶' or cell["symbol"] == ['╶']:
             if dir == "right":
-                self._add_start_spacing(d, 0.5, 0)
-                d.append(svg.h(self.p.cell_width))
+                self._add_start_spacing(d, 0.4, 0)
+                d.append(svg.h(self.p.cell_width * 0.6))
                 widths.append(widths[-1] + 1)
             elif dir == "left":
                 self._add_start_spacing(d, .5, .5)
