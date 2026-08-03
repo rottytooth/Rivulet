@@ -612,7 +612,7 @@ list2list_append_action = """
  7  ╷    ╷
 """
 def test_list2list_append_action(capsys):
-    "append (action1) should append the last item from reflist"
+    "append (action1) for list2list should append the entire reflist"
     int = Interpreter()
     st = []
 
@@ -622,5 +622,5 @@ def test_list2list_append_action(capsys):
 
     int.interpret_program(str(list2list_append_action), False, None, callback)
 
-    # last item of list1 should be appended to list2
-    assert st[2] == [8, 3]
+    # all of list1 should be appended to list2
+    assert st[2] == [8, 1, 2, 3]

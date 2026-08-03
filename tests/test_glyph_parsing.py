@@ -434,8 +434,8 @@ def test_question_strand_if_1():
     assert block["tokens"][0]["ref_cell"] == [1, 0]
 
 question_strand_while_vert = '''╵  ╷
-   │ ╭─╮     
-   │ │ ╷  
+   │ ╭─╮
+   │ │ ╷
    ╰─╯ │
     ───╯ ╷
 '''
@@ -446,3 +446,15 @@ def test_question_strand_while_1():
     assert block["tokens"][0]["applies_to"] == "list"
     assert block["tokens"][0]["block_type"] == "while"
     assert block["tokens"][0]["ref_list"] == 1
+
+level_3_glyph = """
+╵╵╵ ╰─╮
+    ╭╴│
+    │ ╷
+5     ╷   ╷
+"""
+
+def test_level_3_detection():
+    parser = Parser()
+    block = parser.parse_program(str(level_3_glyph))[0]
+    assert block["level"] == 3

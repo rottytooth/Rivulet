@@ -12,7 +12,7 @@ Themes = {
         "stroke_linecap": "round",
 
         "curve_size": 0.8,
-        "cell_width": 60,
+        "cell_width": 70,
         "cell_height": 100,
     }),
     "synth": SvgGenerator.Parameters({

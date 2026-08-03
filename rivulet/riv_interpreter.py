@@ -234,14 +234,14 @@ class Interpreter:
                 # find item to apply to
                 if list2list:
                     # special case for pop/append
-                    # FIXME: there may be other cases where list2list requires the last item
                     if token["action"]["command"] == "pop_and_append":
                         if len(state[token["ref_cell"][0]]) == 0:
                             state[token["list"]].append(0)
                         else:
                             state[token["list"]].append(state[token["ref_cell"][0]].pop(-1))
                     elif token["action"]["command"] == "append":
-                        state[token["list"]].append(state[token["ref_cell"][0]][-1])
+                        state[token["list"]].extend(state[token["ref_cell"][0]])
+                        # ref_cell[0] is the source list
                     else:
                         for a in range(len(state[token["list"]]), len(source)):
                             # append zeroes to create space for the new values

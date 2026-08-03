@@ -66,7 +66,7 @@ class PythonTranspiler:
             if token["subtype"] == "value":
                 a(str(token['value']))
             if token["subtype"] == "ref":
-                if token["action"] and token["action"]["command"] == "pop_and_append" and (token["action"]["subtype"] == "list" or token["action"]["subtype"] == "list2list"):
+                if token["action"] and token["action"]["command"] in ("pop_and_append", "append") and token["action"]["subtype"] in ("list", "list2list"):
                     # in this case, we refer to the whole list
                     # FIXME: there ought to be a flag for this in the command token
                     a(f"list{token['ref_cell'][0]}")
